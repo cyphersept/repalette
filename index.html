@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="repalette-style.css">
+</head>
+
+<body>
+    <header>
+        <h1>repalette</h1>
+        <h2>apply a new palette to pixel art</h2>
+    </header>
+
+    <main>
+        <div class="display"></div>
+        <canvas id="output-canvas" class="display" width="150" height="150"></canvas>
+
+        <div class="image-list">
+            <h3>Images</h3>
+            <input type="file" name="" id="img-upload" accept="image/*" aria-label="Upload Image" multiple>
+        </div>
+        <div class="palette-list">Palettes
+            <h3>Palettes</h3>
+            <div class="upload-palettes">
+                <button class="upload-url"></button>
+                <input type="text" id="palette-url" name="palette-url" placeholder="Enter URL for palette image..." aria-label="Enter URL for palette image" data-error="No valid image linked">
+                <input type="file" id="palette-upload" name="palette-upload" accept="image/*" aria-label="Upload palette image">
+            </div>
+        </div>
+
+    </main>
+
+    <section class= "info">
+        <p>To preserve a specific order for the source image's palette, embed it in the top left corner of the image. </p>
+    </section>
+</body>
+</html>
+

@@ -1,0 +1,41 @@
+* {
+    font-family:'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+    font-size: 16px;
+}
+
+
+
+html {
+    --l1: #eef4f7;
+    --d1: #0a244d;
+}
+
+
+
+@media (prefers-color-scheme: dark) {
+    .themed {
+        --outline-color: var(--l1);
+
+        background-color: var(--d1);
+        color: var(--l1);
+    }
+}
+
+@media (prefers-color-scheme: light) {
+    .themed {
+        --outline-color: var(--d1);
+
+        background-color: var(--l1);
+        color: var(--d1);
+    }
+}
+
+input::before {
+    content: attr(data-error);
+    visibility: hidden;
+}
+
+input.show-error::before {
+    visibility: visible;
+}
+  
