@@ -9,32 +9,53 @@
 
 <body>
     <header>
-        <h1>repalette</h1>
-        <h2>apply a new palette to pixel art</h2>
+        <h1 class="center">repalette</h1>
+        <h2 class="center">apply a new palette to pixel art</h2>
     </header>
 
     <main>
-        <div class="display"></div>
-        <canvas id="output-canvas" class="display" width="150" height="150"></canvas>
-
-        <div class="image-list">
-            <h3>Images</h3>
-            <input type="file" name="" id="img-upload" accept="image/*" aria-label="Upload Image" multiple>
+        <div class="left-display flex vertical center">
+            <h3>Original</h3>
+            <img src="" alt="" class="display">
         </div>
-        <div class="palette-list">Palettes
+        
+        <div class="right-display flex vertical center">
+            <h3>Output</h3>
+            <canvas id="output-canvas" class="display"></canvas>
+        </div>
+        
+        <img src="https://icons8.com/icon/15984/shuffle" alt="" class="shuffle">
+
+        <div class="images list flex vertical center">
+            <h3>Images</h3>
+            <div class="divider"></div>
+            <input type="file" name="" id="img-upload" accept="image/*" aria-label="Upload Image" multiple>
+            <div class="img-url-upload">
+                <span class="upload-url btn">⮕</span>
+                <input type="text" id="img-url" name="img-url" placeholder="Enter URL for image..." aria-label="Enter URL for palette image" data-error="No valid image linked">
+            </div>
+            <div class="image">
+                <span class="img-name">filename</span>
+                <span class="close btn">🞪</span>
+            </div>
+        </div>
+        
+        <div class="palettes list flex vertical center">
             <h3>Palettes</h3>
-            <div class="upload-palettes">
-                <button class="upload-url"></button>
+            <div class="divider"></div>
+            <input type="file" id="palette-upload" name="palette-upload" accept="image/*" aria-label="Upload palette image">
+            <div class="palette-url-upload">
+                <span class="upload-url btn">⮕</span>
                 <input type="text" id="palette-url" name="palette-url" placeholder="Enter URL for palette image..." aria-label="Enter URL for palette image" data-error="No valid image linked">
-                <input type="file" id="palette-upload" name="palette-upload" accept="image/*" aria-label="Upload palette image">
             </div>
         </div>
 
     </main>
 
-    <section class= "info">
-        <p>To preserve a specific order for the source image's palette, embed it in the top left corner of the image. </p>
-    </section>
+    <div class= "info" hidden>
+        To preserve a specific order for the source image's palette, embed it in the top left corner of the image.
+    </div>
+    <footer class="center"> Created by</footer>
 </body>
 </html>
 

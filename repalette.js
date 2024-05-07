@@ -39,7 +39,7 @@ function uploadPalette(input)
         if (this.width > 0) {
             const palette = paletteFromImg(loadImageToCanvas(img, hiddenCanvas, htx))
             input.classList.remove("show-error")
-            document.querySelector(".palette-list").appendChild(addPalette(palette))
+            document.querySelector(".palettes.list").appendChild(addPalette(palette))
         }
     }
 }
@@ -136,11 +136,12 @@ function addImage(file) {
         img.onload = () => {
             // If the file is new, append an element to the DOM
             if (!images[file.name]) {
-                const el = document.createElement("li"); 
+                const el = document.createElement("div"); 
                 images[file.name] = {};
                 el.textContent = file.name;
+                el.classList.add("image");
                 el.dataset.obj = images[file.name];
-                document.querySelector(".image-list").appendChild(el);
+                document.querySelector(".images.list").appendChild(el);
             }
 
             // Update the file's associated obj data

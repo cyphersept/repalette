@@ -1,34 +1,50 @@
 * {
-    font-family:'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+    font-family:'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
     font-size: 16px;
+    letter-spacing: 0.01em;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
 
 
 html {
-    --l1: #eef4f7;
-    --d1: #0a244d;
+    --light1: var(--b3);
+    --light2: var(--b4);
+    --light3: var(--b7);
+    --dark1: var(--b5);
+    --dark2: var(--b6);
+    --accent1: var(--b1);
+    --accent2: var(--b2);
+
+    --b1: #B65A5A;
+    --b2: #7CA4A3;
+    --b3: #CBC3A5;
+    --b4: #BE9775;
+    --b5: #5B5358;
+    --b6: #484048; /*333033*/
+    --b7: #7b7579; /*#776677*/
+
+    --j1: #d11033;
+    --j2: #c8ad87;
+    --j3: #eee7d7;
+    --j4: #f6f5f6;
+    --j5: #424246;
 }
 
-
-
-@media (prefers-color-scheme: dark) {
-    .themed {
-        --outline-color: var(--l1);
-
-        background-color: var(--d1);
-        color: var(--l1);
-    }
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-flow: column;
 }
 
-@media (prefers-color-scheme: light) {
-    .themed {
-        --outline-color: var(--d1);
-
-        background-color: var(--l1);
-        color: var(--d1);
-    }
+main {
+    background-color: var(--dark1);
+    color: var(--light1);
+    flex-grow: 1;
 }
+
 
 input::before {
     content: attr(data-error);
@@ -38,4 +54,142 @@ input::before {
 input.show-error::before {
     visibility: visible;
 }
+
+
+main {
+    display: grid;
+    grid-template-columns: 1fr 3rem 1fr;
+    gap: 2rem;
+    padding: 2rem;
+    grid-template-rows: auto auto;
+}
+
+h1 {
+    font-size: 4rem;
+    margin-top: 0;
+    margin-bottom: 1rem;
+    color: var(--light1);
+}
+
+h2 {
+    font-size: 1.5rem;
+    color: var(--light2);
+}
+
+header{
+    padding-top: 2rem;
+    padding-bottom: 3rem;
+    background-color: var(--dark2);
+}
+
+footer {
+    background-color: var(--dark2);
+    color: var(--light3);
+    padding: 2rem;
+}
+
+/*#region Displays*/
+.left-display {
+    grid-area: 1 / 1 / 2 / 2
+}
+
+.right-display {
+    grid-area: 1 / 3 / 2 / 4 
+}
+
+.left-display, .right-display {
+    gap: 1.5rem;
+    align-self: center;
+}
+
+.display {
+    outline: 4px dashed var(--light1);
+    outline-offset: 4px;
+
+}
+/*#endregion*/
+
+/*#region Lists*/
+.images.list {
+    grid-area: 2 / 1 / 3 / 2;
+}
+
+.palettes.list {
+    grid-area: 2 / 3 / 3 / 4;
+}
+
+.list {
+    gap: 0.5rem;
+}
+
+.palette-url-upload, .img-url-upload, .image, .palette {
+    position: relative;
+    width: 60%;
+}
+
+input[type=text] {
+    margin-inline-start: 2rem;
+    width: calc(100% - 2rem);
+    background-color: var(--light1);
+    border-color: var(--light1);
+    padding-left: 0.25em;
+    border-radius: 0.2em;
+}
+
+input[type=text]::placeholder {
+    color: var(--dark1);
+}
+
+.img-name {
+    padding-inline-start: 2rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: inline-block;
+    width: 100%;
+}
+/*#endregion*/
+
+/*#region Style classes*/
+.center {
+    text-align: center;
+}
+
+.vertical {
+    flex-flow: column;
+}
+
+.flex.center {
+    display: flex;
+    align-items: center;
+}
+
+.divider {
+    width: 60%;
+    border: 0.125rem solid var(--accent2);
+    border-radius: 4px;
+    margin: 0.5rem;
+}
+
+.btn {
+    /* Somehow this aligns the icons with the text */
+    position: absolute;
+    line-height: 0%;
+    left: 0;
+    bottom: 55%; 
+    /* Transform behaviour */
+    cursor: pointer;
+    transform: scale(1);
+    transition: transform 0.15s ease-in-out;
+    transform-origin: 55% 50%;
+    color: var(--accent2);
+}
+
+.close {
+    color: var(--light2);
+}
   
+.btn:hover {
+    transform: scale(1.3); 
+}
+
+/*#endregion*/
