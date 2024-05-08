@@ -1,13 +1,27 @@
 * {
     font-family:'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
     font-size: 16px;
-    letter-spacing: 0.01em;
+    letter-spacing: 0.02em;
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
+h1 {
+    font-size: 4rem;
+    margin-top: 0;
+    margin-bottom: 1rem;
+    color: var(--light1);
+}
 
+h2 {
+    font-size: 1.5rem;
+    color: var(--light2);
+}
+
+h3 {
+    font-size: 18px
+}
 
 html {
     --light1: var(--b3);
@@ -43,37 +57,11 @@ main {
     background-color: var(--dark1);
     color: var(--light1);
     flex-grow: 1;
-}
-
-
-input::before {
-    content: attr(data-error);
-    visibility: hidden;
-}
-
-input.show-error::before {
-    visibility: visible;
-}
-
-
-main {
     display: grid;
     grid-template-columns: 1fr 3rem 1fr;
-    gap: 2rem;
+    row-gap: 2rem;
     padding: 2rem;
     grid-template-rows: auto auto;
-}
-
-h1 {
-    font-size: 4rem;
-    margin-top: 0;
-    margin-bottom: 1rem;
-    color: var(--light1);
-}
-
-h2 {
-    font-size: 1.5rem;
-    color: var(--light2);
 }
 
 header{
@@ -105,7 +93,6 @@ footer {
 .display {
     outline: 4px dashed var(--light1);
     outline-offset: 4px;
-
 }
 /*#endregion*/
 
@@ -122,30 +109,33 @@ footer {
     gap: 0.5rem;
 }
 
-.palette-url-upload, .img-url-upload, .image, .palette {
+.url-upload, .image, .palette {
     position: relative;
-    width: 60%;
 }
 
-input[type=text] {
-    margin-inline-start: 2rem;
-    width: calc(100% - 2rem);
+input[type=text] {   
+    width: 100%;
     background-color: var(--light1);
     border-color: var(--light1);
-    padding-left: 0.25em;
     border-radius: 0.2em;
+    margin: 0.25rem 0;
+
 }
 
 input[type=text]::placeholder {
     color: var(--dark1);
+    text-align: center;
 }
 
-.img-name {
-    padding-inline-start: 2rem;
+.img-name { 
     overflow: hidden;
     text-overflow: ellipsis;
     display: inline-block;
     width: 100%;
+}
+
+.list > * {
+    width: clamp(16rem, 75%, 32rem)
 }
 /*#endregion*/
 
@@ -164,18 +154,17 @@ input[type=text]::placeholder {
 }
 
 .divider {
-    width: 60%;
+    margin: 0.25rem 0;
     border: 0.125rem solid var(--accent2);
     border-radius: 4px;
-    margin: 0.5rem;
 }
 
 .btn {
     /* Somehow this aligns the icons with the text */
     position: absolute;
     line-height: 0%;
-    left: 0;
-    bottom: 55%; 
+    left: -2rem;
+    bottom: 50%; 
     /* Transform behaviour */
     cursor: pointer;
     transform: scale(1);
@@ -184,12 +173,29 @@ input[type=text]::placeholder {
     color: var(--accent2);
 }
 
+.btn::before {  
+    /* Expands clickable area */
+    content: "";
+    display: inline-block;
+    position: absolute;
+    width: 3rem;
+    height: 2rem;
+    top: -1rem;
+    left: -1rem;
+}
+
 .close {
     color: var(--light2);
+    bottom: 55%; 
 }
   
 .btn:hover {
     transform: scale(1.3); 
+}
+
+.error {
+    color: var(--accent1);
+    margin-top: -0.25rem;
 }
 
 /*#endregion*/

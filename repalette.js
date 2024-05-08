@@ -1,54 +1,99 @@
+//import Sortable from 'sortablejs/modular/sortable.core.esm.js';
+// https://github.com/SortableJS/Sortable?tab=readme-ov-file
+
 const displayCanvas = document.getElementById("output-canvas");
-const ctx = canvas.getContext("2d");
+const ctx = displayCanvas.getContext("2d");
 
-const hiddenCanvas = document.createElement("canvas");
+const hiddenCanvas = document.getElementById("hidden-canvas");
 const htx = hiddenCanvas.getContext("2d");
-const images = {}
+const images = {};
+const palettes = {};
 
-document.getElementById("img-upload").onchange = function() {uploadImages(this)}
-document.getElementById("palette-upload").onchange = uploadPalette()
-document.querySelector(".upload-url").onclick = uploadPalette(document.getElementById("palette-url").value)
+const imagesList = document.querySelector(".images.list");
+const palettesList = document.querySelector("palettes.list");
+const imgTemplate = document.querySelector(".image.template");
+const paletteTemplate = document.querySelector(".palette.template");
+
+document.getElementById("img-upload").onchange = function() {uploadFiles(this, "image")}
+document.getElementById("palette-upload").onchange = function() {uploadFiles(this, "palette")}
+//document.querySelector(".palettes .btn").onclick = function() {uploadPalette(this.nextElementSibling)}
 
 // ============================
 // #region Palette Upload
 // ============================
 
 // Process user-uploaded palette from file or URL
-function uploadPalette(input)
-{
-    // Get img from paletteURL 
-    const input = document.getElementById("palette-url")
-    const img = new Image();
+function uploadFiles(input, type) {
+    const arr = (type == "image") ? images : palettes;
 
-    // Set image source if input is a file
-    if (input instanceof File) {
-        const reader = new FileReader();
-        reader.onload = function(e) { img.src = e.target.result };
-        reader.readAsDataURL(input);
-    } 
-    // Set image source if input is a URL
-    else {
-        img.src = input;
-    }
-
-    // If the url is not a valid image, display error
-    img.onerror = () => { input.classList.add("show-error") }
-
-    // If the image loads, add the palette list to the DOM
-    img.onload = () => {
-        if (this.width > 0) {
-            const palette = paletteFromImg(loadImageToCanvas(img, hiddenCanvas, htx))
-            input.classList.remove("show-error")
-            document.querySelector(".palettes.list").appendChild(addPalette(palette))
+    for (const file of input.files) {
+        if (arr[file.name] && arr[file.name].date == file.lastModified) {
+            return false;
+        }
+        else {
+            if (type == "image") console.log(addImage(file));
+            else if (type == "palette") console.log(addPalette(file));
         }
     }
 }
 
+
+// function uploadPalette(input) {
+//     const img = new Image();
+//     const error = document.querySelector(".palettes .error")
+
+//     // If the url is not a valid image, display error
+//     img.onerror = () => { 
+//         console.log("Invalid URL")
+//         //error.hidden = false;
+//     }
+//     // If the image loads, add the palette list to the DOM
+//     img.onload = () => {
+//         console.log("Successfully loaded: " + img.width)
+//         if (img.width > 0) {
+//             const palette = paletteFromImg(loadImageToCanvas(img, hiddenCanvas, htx))
+//             error.hidden = true;
+//             document.querySelector(".palettes.list").appendChild(addPalette(palette))
+//         }
+//     }
+//     // Set image source if input is a file
+//     if (input instanceof File) {
+//         const reader = new FileReader();
+//         reader.onload = function(e) { img.src = e.target.result };
+//         reader.readAsDataURL(input);
+//     } 
+//     // Set image source if input is a URL
+//     else if (typeof input.value === "string") {
+//         img.src = input.value.trim();
+//         //document.querySelector(".palettes.list").appendChild(img)
+//     }
+// }
+
 // Create DOM display of palette information-- returns node 
-function addPalette(obj) {
-    const ul = Document.createElement("ul");
-    ul.classList.add("palette")
-    ul.dataset.obj = obj;  
+function addPalette(file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const img = new Image();
+        const id = file.name + file.lastModified;
+
+        img.onload = () => {
+            console.log("Successfully loaded: " + img.width)
+            if (img.width > 0) {
+                const palette = paletteFromImg(loadImageToCanvas(img, hiddenCanvas, htx))
+                error.hidden = true;
+                createPaletteNode(palette);
+            }
+        };
+
+        img.src = e.target.result;
+        reader.readAsDataURL(input);
+    }
+}
+
+function createPaletteNode(obj) {
+    const el = paletteTemplate.cloneNode(true);
+    el.dataset.obj = obj;
+    el.classList.remove("template");
 
     // Display each color in palette
     for (const color in obj) {
@@ -56,16 +101,15 @@ function addPalette(obj) {
         li.classList.add("color");
         li.dataset.key = color.rgb.toString()
         li.style.backgroundColor = `rgb(${li.dataset.key})`
-        ul.appendChild(li);
+        el.appendChild(li);
     }
-
-    return ul;
+    palettesList.appendChild(el);
+    return el;
 }
-
 // Scans the image for unique colours, generates an index of all values
 function paletteFromImg(imageData){
     const id = Math.floor(Date.now() * Math.random());
-    const palette = {id: id, colors: {}, order};
+    const palette = {id: id, colors: {}, order:[]};
     const data = imageData.data;
     for (let i = 0; i < data.length; i += 4) {
         // Use rgb string as key (Different alphas are ignored)
@@ -77,7 +121,7 @@ function paletteFromImg(imageData){
                 r: data[i],
                 g: data[i+1],
                 b: data[i+2],
-                indices: i, 
+                indices: [i], 
                 remaps: {}
             }
         }
@@ -125,45 +169,56 @@ function uploadImages(input) {
     }
 }
 
+function imgFromUrl(id) {
+    const url = document.getElementById(id).value;
+}
+
 // Create imgObj of image information
 function addImage(file) {
     const reader = new FileReader();
     reader.onload = (e) => {
         // Create Image
         const img = new Image();
+        const name = file.name;
 
         // Update and process image data once file is loaded
         img.onload = () => {
             // If the file is new, append an element to the DOM
-            if (!images[file.name]) {
-                const el = document.createElement("div"); 
-                images[file.name] = {};
-                el.textContent = file.name;
-                el.classList.add("image");
-                el.dataset.obj = images[file.name];
-                document.querySelector(".images.list").appendChild(el);
+            if (!images[name]) {
+                createImgNode(file)
             }
 
             // Update the file's associated obj data
-            images[file.name].name = file.name
-            images[file.name].date = file.lastModified;
-            images[file.name].img = img;
-            images[file.name].imgData = loadImageToCanvas(img, hiddenCanvas, htx);
-            images[file.name].defaultPalette = paletteFromImg(images[file.name].imgData);
-            images[file.name].repalettes = {}; // Stores imgData of processed alt palettes
+            images[name].name = name
+            images[name].date = file.lastModified;
+            images[name].img = img;
+            images[name].imgData = loadImageToCanvas(img, hiddenCanvas, htx);
+            images[name].defaultPalette = paletteFromImg(images[name].imgData);
+            images[name].repalettes = {}; // Stores imgData of processed alt palettes
         };
         
         // Trigger image loading and reader
         img.src = e.target.result; 
     };
     reader.readAsDataURL(file);
+    return images[file.name]
+}
+
+function createImgNode(file) {
+    const el = imgTemplate.cloneNode(true)
+    images[file.name] = {};
+    el.lastElementChild.textContent = file.name;
+    el.dataset.obj = images[file.name];
+    el.classList.remove("template");
+    el.hidden = false
+    imagesList.appendChild(el);
+    return el;
 }
 
 // Deletes image from project
 function deleteImage(el) {
     delete images[el.dataset.obj.name];
     el.remove();
-
 }
 
 // #endregion
@@ -174,8 +229,9 @@ function loadImageToCanvas(img, canvas, context) {
     canvas.width = img.naturalWidth;
     canvas.height = img.naturalHeight;
     context.clearRect(0, 0, canvas.width, canvas.height);
-    context.drawImage(image, 0, 0, canvas.width, canvas.height);
-    let imgData = context.getImageData(0, 0, canvas.width, canvas.height)
+    context.drawImage(img, 0, 0, canvas.width, canvas.height);
+    let imgData = context.getImageData(0, 0, canvas.width, canvas.height);
+    console.log(imgData);
 
     return imgData;
 }

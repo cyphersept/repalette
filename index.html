@@ -15,12 +15,13 @@
 
     <main>
         <div class="left-display flex vertical center">
-            <h3>Original</h3>
-            <img src="" alt="" class="display">
+            <h2>Original</h2>
+            <canvas id="hidden-canvas" class="display"></canvas>
+            <!-- <img src="" alt="" class="display"> -->
         </div>
         
         <div class="right-display flex vertical center">
-            <h3>Output</h3>
+            <h2>Output</h2>
             <canvas id="output-canvas" class="display"></canvas>
         </div>
         
@@ -29,24 +30,36 @@
         <div class="images list flex vertical center">
             <h3>Images</h3>
             <div class="divider"></div>
-            <input type="file" name="" id="img-upload" accept="image/*" aria-label="Upload Image" multiple>
-            <div class="img-url-upload">
-                <span class="upload-url btn">⮕</span>
-                <input type="text" id="img-url" name="img-url" placeholder="Enter URL for image..." aria-label="Enter URL for palette image" data-error="No valid image linked">
+            <div class="center">
+                <input type="file" name="" id="img-upload" accept="image/*"  aria-label="Upload Image" multiple>
             </div>
-            <div class="image">
+            
+            <!-- <div class="url-upload">
+                <span class="btn">🢂</span>
+                <input type="text" id="img-url" name="img-url" placeholder="Or enter URL for image..." aria-label="Or enter URL for palette image" data-error="⚠ No valid image linked">
+            </div>
+            <div class="error" hidden>⚠ Not a valid image link</div> -->
+            <div class="image template" hidden>
+                <span class="close btn" onclick="deleteImage(this.parentNode)">🞪</span>
                 <span class="img-name">filename</span>
-                <span class="close btn">🞪</span>
             </div>
         </div>
         
         <div class="palettes list flex vertical center">
             <h3>Palettes</h3>
             <div class="divider"></div>
-            <input type="file" id="palette-upload" name="palette-upload" accept="image/*" aria-label="Upload palette image">
-            <div class="palette-url-upload">
-                <span class="upload-url btn">⮕</span>
-                <input type="text" id="palette-url" name="palette-url" placeholder="Enter URL for palette image..." aria-label="Enter URL for palette image" data-error="No valid image linked">
+            <div class="center">
+                <input type="file" id="palette-upload" name="palette-upload" accept="image/*" aria-label="Upload palette image" multiple>
+            </div>
+            
+            <!-- <div class="url-upload">
+                <span class="btn">🢂</span>
+                <input type="text" id="palette-url" name="palette-url" placeholder="Or enter URL for palette image..." aria-label="Or enter URL for palette image">
+            </div>
+            <div class="error" hidden>⚠ Not a valid image link</div> -->
+            <div class="palette template" hidden>
+                <span class="close btn" onclick="deleteImage(this.parentNode)">🞪</span>
+                <ul class="color-list"></ul>
             </div>
         </div>
 
@@ -56,6 +69,7 @@
         To preserve a specific order for the source image's palette, embed it in the top left corner of the image.
     </div>
     <footer class="center"> Created by</footer>
+    <script src="repalette.js"></script> 
 </body>
 </html>
 
