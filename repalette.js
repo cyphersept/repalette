@@ -10,7 +10,7 @@ const images = {};
 const palettes = {};
 
 const imagesList = document.querySelector(".images.list");
-const palettesList = document.querySelector("palettes.list");
+const palettesList = document.querySelector(".palettes.list");
 const imgTemplate = document.querySelector(".image.template");
 const paletteTemplate = document.querySelector(".palette.template");
 
@@ -18,6 +18,7 @@ document.getElementById("img-upload").onchange = function() {uploadFiles(this, "
 document.getElementById("palette-upload").onchange = function() {uploadFiles(this, "palette")}
 //document.querySelector(".palettes .btn").onclick = function() {uploadPalette(this.nextElementSibling)}
 
+document.querySelector(".repalette").onclick = function() {repalette};
 // ============================
 // #region Palette Upload
 // ============================
@@ -74,34 +75,36 @@ function addPalette(file) {
     const reader = new FileReader();
     reader.onload = (e) => {
         const img = new Image();
-        const id = file.name + file.lastModified;
 
+        // Update and process image data once file is loaded
         img.onload = () => {
             console.log("Successfully loaded: " + img.width)
             if (img.width > 0) {
                 const palette = paletteFromImg(loadImageToCanvas(img, hiddenCanvas, htx))
-                error.hidden = true;
                 createPaletteNode(palette);
             }
         };
 
         img.src = e.target.result;
-        reader.readAsDataURL(input);
     }
+    reader.readAsDataURL(file);
+    return palettes[file.name];
 }
 
 function createPaletteNode(obj) {
     const el = paletteTemplate.cloneNode(true);
+    const ul = el.querySelector(".color-list");
     el.dataset.obj = obj;
     el.classList.remove("template");
+    el.hidden = false;
 
     // Display each color in palette
-    for (const color in obj) {
-        const li = Document.createElement("li");
+    for (const key in obj.colors) {
+        const li = document.createElement("li");
         li.classList.add("color");
-        li.dataset.key = color.rgb.toString()
+        li.dataset.key = key;
         li.style.backgroundColor = `rgb(${li.dataset.key})`
-        el.appendChild(li);
+        ul.appendChild(li);
     }
     palettesList.appendChild(el);
     return el;
@@ -140,11 +143,11 @@ function deletePalette(el) {
     const id = palette.id;
 
     // Remove each palette remap from img + img.defaultpalette
-    for (const imgObj in images) {
-        for (const color in imgObj.defaultPalette.colors) {
+    for (const key in images) {
+        for (const color in images[key].defaultPalette.colors) {
             delete color.remaps[id]
         }
-        delete imgObj.repalettes[id];
+        delete images[key].repalettes[id];
     }
 
     // Remove DOM element
@@ -343,13 +346,13 @@ function repalette(imgObj, newPalette, show=true) {
         )
     const basePalette = imgObj.defaultPalette;
     const id = newPalette.id
-    for (const baseColor in basePalette.colors) {
+    for (const key in basePalette.colors) {
         // Gets the base color's mapped color from the new palette
-        const newR = baseColor.remaps[id].r;
-        const newG = baseColor.remaps[id].g;
-        const newB = baseColor.remaps[id].b;
+        const newR = basePalette[key].remaps[id].r;
+        const newG = basePalette[key].remaps[id].g;
+        const newB = basePalette[key].remaps[id].b;
         // Replace each index of mapped color with new color
-        for (const i of baseColor.indices) {
+        for (const i of [key].indices) {
             color.remaps[id]
             newImg.data[i] = newR;
             newImg.data[i+1] = newG;
