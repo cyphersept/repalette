@@ -228,16 +228,26 @@ input[type=text]::placeholder {
     width: 6rem;
     height: 3rem;
     background-color: var(--accent1);
-    color: var(--dark2);
     border: 4px outset var(--accent1);
     border-radius: 0.25rem;
-    margin-top: calc();
+    overflow: hidden;
 }
 
 .repalette svg {
-    fill: var(--dark2);
-    height: 100%;
+    fill: var(--dark1);
+    height: 2.5rem;
     margin: auto;
+}
+
+.repalette:active {
+    border-style: inset;
+    padding: 4px 0 0 4px;
+}
+
+.repalette:hover {
+    /* filter: brightness(80%) contrast(120%); */
+    background-color: var(--light2);
+    border-color: var(--light2);
 }
 
 .h2-spacer {

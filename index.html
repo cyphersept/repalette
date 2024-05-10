@@ -16,14 +16,14 @@
     <main>
         <section class="left-display flex vertical center">
             <h2>Original</h2>
-            <canvas id="hidden-canvas" class="display"></canvas>
-            <!-- <img src="" alt="" class="display"> -->
+            <img src="" alt="" class="display">
         </section>
         
         <section class="center-display flex vertical center">
             <div class="h2-spacer"></div>
             <button type="button" class="repalette">
-                <svg class="dynamic-color" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <!-- From https://www.svgrepo.com/svg/525418/magic-stick-3 -->
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
                     <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
                     <g id="SVGRepo_iconCarrier">
@@ -49,7 +49,6 @@
             <div class="center">
                 <input type="file" name="" id="img-upload" accept="image/*"  aria-label="Upload Image" multiple>
             </div>
-            
             <!-- <div class="url-upload">
                 <button type="button" class="enter custom-btn">🢂</button>
                 <input type="text" id="img-url" name="img-url" placeholder="Or enter URL for image..." aria-label="Or enter URL for palette image" data-error="⚠ No valid image linked">
