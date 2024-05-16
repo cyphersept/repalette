@@ -55,7 +55,7 @@
             </div>
             <div class="error" hidden>⚠ Not a valid image link</div> -->
             <div class="image template" hidden>
-                <button type="button" class="close custom-btn" onclick="deleteImage(this.parentNode)">🞪</button>
+                <button type="button" class="close custom-btn" onclick="deleteImage(this.parentNode, event)">🞪</button>
                 <span class="img-name">filename</span>
             </div>
         </section>
@@ -73,8 +73,12 @@
             </div>
             <div class="error" hidden>⚠ Not a valid image link</div> -->
             <div class="palette template" hidden>
-                <button type="button" class="close custom-btn" onclick="deleteImage(this.parentNode)">🞪</button>
-                <ul class="flex color-list"></ul>
+                <button type="button" class="close custom-btn" onclick="deleteImage(this.parentNode, event)">🞪</button>
+                <div class="palette-name">My New Palette
+                    <button class="rename custom-btn"></button>
+                    <button class="expand custom-btn"></button>
+                </div>
+                <ul class="flex color-list" hidden></ul>
             </div>
         </section>
 

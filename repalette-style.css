@@ -254,4 +254,20 @@ input[type=text]::placeholder {
     height: var(--h2);
 }
 
+.selected .img-name {
+    background-color: var(--accent1);
+    border-radius: 4px;
+}
+
+.selected {
+    outline: 2px solid var(--light1);
+    outline-offset: 2px;
+    border-radius: 2px;
+}
+
+.palette-name:focus {
+    outline: none;
+}
+
+
 /*#endregion*/

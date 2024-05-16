@@ -2,11 +2,11 @@
 // https://github.com/SortableJS/Sortable?tab=readme-ov-file
 
 const displayCanvas = document.getElementById("output-canvas");
-const ctx = displayCanvas.getContext("2d");
+const ctx = displayCanvas.getContext("2d", { willReadFrequently: true });
 const displayOriginal = document.querySelector("img.display")
 
 const hiddenCanvas = document.createElement("canvas");
-const htx = hiddenCanvas.getContext("2d");
+const htx = hiddenCanvas.getContext("2d", { willReadFrequently: true });
 const images = {};
 const palettes = {};
 
@@ -15,11 +15,29 @@ const palettesList = document.querySelector(".palettes.list");
 const imgTemplate = document.querySelector(".image.template");
 const paletteTemplate = document.querySelector(".palette.template");
 
-document.getElementById("img-upload").onchange = function() {uploadFiles(this, "image")}
-document.getElementById("palette-upload").onchange = function() {uploadFiles(this, "palette")}
+document.getElementById("img-upload").onchange = function() {uploadFiles(this, "image")};
+document.getElementById("palette-upload").onchange = function() {uploadFiles(this, "palette")};
 //document.querySelector(".palettes .btn").onclick = function() {uploadPalette(this.nextElementSibling)}
 
-document.querySelector(".repalette").onclick = function() {repalette};
+document.querySelector(".repalette").onclick = function() {repalette(getSelected("image"), getSelected("palette"))};
+
+imagesList.onclick = (event) => {
+    if (event.target.classList.contains("image")) switchSelected(event.target);
+}
+
+palettesList.onclick = (event) => {
+    if (event.target.classList.contains("rename")) renamePalette(event.target.parentElement);
+    if (event.target.classList.contains("palettes")) switchSelected(event.target);
+}
+
+palettesList.addEventListener('blur', function(event) {
+    if (event.target.matches('.palette-name')) {
+        console.log('Palette name edited:', event.target);
+        event.target.contentEditable = false;
+        // switchSelected(event.target);
+    }
+}, true); // UseCapture parameter set to true to catch the event in the capturing phase
+
 // ============================
 // #region Palette Upload
 // ============================
@@ -34,11 +52,11 @@ async function uploadFiles(input, type) {
         if (type == "image") {
             if (arr[file.name] && arr[file.name].date == file.lastModified) return false;
             last = await addImage(file);
-            console.log(last.obj);
+            console.log(last);
         }
         else if (type == "palette") {
             last = await addPalette(file);
-            console.log(last.obj);
+            console.log(last);
         }
     }
     // Select the last-created node
@@ -78,7 +96,7 @@ function addPalette(file) {
 function createPaletteNode(obj) {
     const el = paletteTemplate.cloneNode(true);
     const ul = el.querySelector(".color-list");
-    el.dataset.obj = obj;
+    el.dataset.objKey = obj.id;
     el.classList.remove("template");
     el.hidden = false;
 
@@ -98,6 +116,7 @@ function paletteFromImg(imageData){
     const id = Math.floor(Date.now() * Math.random());
     const palette = {id: id, colors: {}, order:[]};
     const data = imageData.data;
+    palettes[id] = palette;
     for (let i = 0; i < data.length; i += 4) {
         // Use rgb string as key (Different alphas are ignored)
         const rgbKey = [data[i], data[i+1], data[i+2]].toString();   
@@ -122,9 +141,11 @@ function paletteFromImg(imageData){
 }
 
 // Deletes palette from project
-function deletePalette(el) {
-    const palette = el.dataset.obj;
+function deletePalette(el, event) {
+    const palette = palettes[el.dataset.objKey];
     const id = palette.id;
+
+    event.stopPropagation();
 
     // Remove each palette remap from img + img.defaultpalette
     for (const key in images) {
@@ -136,6 +157,7 @@ function deletePalette(el) {
 
     // Remove DOM element
     el.remove();
+    delete palettes[id]
 }
 
 // #endregion
@@ -143,18 +165,6 @@ function deletePalette(el) {
 // ============================
 // #region Image Upload
 // ============================
-
-// Image upload logic
-function uploadImages(input) {
-    for (const file of input.files) {
-        if (images[file.name] && images[file.name].date == file.lastModified) {
-            return false;
-        }
-        else {
-            console.log(addImage(file));
-        }
-    }
-}
 
 function imgFromUrl(id) {
     const url = document.getElementById(id).value;
@@ -171,18 +181,21 @@ function addImage(file) {
 
             // Update and process image data once file is loaded
             img.onload = () => {
+                const obj = images[name] || {}
+
+                // Update the file's associated obj data
+                obj.name = name;
+                obj.date = file.lastModified;
+                obj.img = img;
+                obj.imgData = loadImageToCanvas(img, hiddenCanvas, htx);
+                obj.defaultPalette = paletteFromImg(obj.imgData);
+                obj.repalettes = {}; // Stores imgData of processed alt palettes
+
                 // If the file is new, append an element to the DOM
                 if (!images[name]) {
-                    images[name] = {node: createImgNode(file)};
+                    images[name] = obj;
+                    obj.node = createImgNode(obj);
                 }
-                
-                // Update the file's associated obj data
-                images[name].name = name;
-                images[name].date = file.lastModified;
-                images[name].img = img;
-                images[name].imgData = loadImageToCanvas(img, hiddenCanvas, htx);
-                images[name].defaultPalette = paletteFromImg(images[name].imgData);
-                images[name].repalettes = {}; // Stores imgData of processed alt palettes
                 
                 resolve(images[name]); // Resolve the promise with the updated images object
             };
@@ -197,10 +210,10 @@ function addImage(file) {
     });
 }
 
-function createImgNode(file) {
+function createImgNode(obj) {
     const el = imgTemplate.cloneNode(true)
-    el.lastElementChild.textContent = file.name;
-    el.dataset.obj = images[file.name];
+    el.lastElementChild.textContent = obj.name;
+    el.dataset.objKey = obj.name;
     el.classList.remove("template");
     el.hidden = false
     imagesList.appendChild(el);
@@ -208,9 +221,15 @@ function createImgNode(file) {
 }
 
 // Deletes image from project
-function deleteImage(el) {
-    delete images[el.dataset.obj.name];
+function deleteImage(el, event) {
+    event.stopPropagation();
+    
+    if (el.classList.contains("selected")) {
+        const next = !el.nextElementSibling ? el.previousElementSibling : el.nextElementSibling;
+        switchSelected(next);
+    }
     el.remove();
+    delete images[el.dataset.objKey];
 }
 
 // #endregion
@@ -240,7 +259,7 @@ function switchSelected(next) {
 
     // Displays selected image
     if (next.classList.contains("image")) {
-        const obj = next.obj;
+        const obj = images[next.dataset.objKey];
         // Changes left display
         displayOriginal.src = obj.img.src;
         displayOriginal.width = obj.img.width;
@@ -249,6 +268,12 @@ function switchSelected(next) {
         loadImageToCanvas(obj.img, displayCanvas, ctx, false);
         
     }
+}
+
+function getSelected(type) {
+    if (type == "image") return images[imagesList.querySelector(".selected").dataset.objKey];
+    else if (type == "palette") return palettes[palettesList.querySelector(".selected").dataset.objKey];
+    else console.log("Invalid type for getSelected()")
 }
 
 
@@ -337,36 +362,47 @@ function mapPalette(basePalette, newPalette) {
     const id = newPalette.id;
     // Map color of basePalette to corresponding in newPalette order
     for (let i = 0; i < basePalette.length; i++) {
-
         o1[i].remaps[id] = o2[i]
     }
 }
 
 // Uses palette mappings to generate recolored image
 function repalette(imgObj, newPalette, show=true) {
+
     const newImg = new ImageData(
         new Uint8ClampedArray(imgObj.imgData.data),
         imgObj.imgData.width,
         imgObj.imgData.height
-        )
+    )
     const basePalette = imgObj.defaultPalette;
     const id = newPalette.id
-    for (const key in basePalette.colors) {
-        // Gets the base color's mapped color from the new palette
-        const newR = basePalette[key].remaps[id].r;
-        const newG = basePalette[key].remaps[id].g;
-        const newB = basePalette[key].remaps[id].b;
-        // Replace each index of mapped color with new color
-        for (const i of [key].indices) {
-            color.remaps[id]
-            newImg.data[i] = newR;
-            newImg.data[i+1] = newG;
-            newImg.data[i+2] = newB;
-        }
-    }
+    let img;
 
-    // Save imagedata to original image object
-    imgObj.repalettes[id] = newImg;
+    // If the image has been repaletted before, get the image data
+    if (imgObj.repalettes[id]) {
+        imgObj.repalettes[id] = newImg
+    }
+    // If the image has not been recoloured before, generate the recolor
+    else if (!imgObj.repalettes[id]) {
+        mapPalette(basePalette, newPalette);
+    
+        for (const key in basePalette.colors) {
+            // Gets the base color's mapped color from the new palette
+            const newR = basePalette[key].remaps[id].r;
+            const newG = basePalette[key].remaps[id].g;
+            const newB = basePalette[key].remaps[id].b;
+            // Replace each index of mapped color with new color
+            for (const i of [key].indices) {
+                color.remaps[id]
+                newImg.data[i] = newR;
+                newImg.data[i+1] = newG;
+                newImg.data[i+2] = newB;
+            }
+        }
+
+        // Save imagedata to original image object
+        imgObj.repalettes[id] = newImg;
+    }
 
     // Show result on output canvas (optional)
     if (show) {
@@ -377,7 +413,15 @@ function repalette(imgObj, newPalette, show=true) {
 }
 
 
+// region Palette Naming 
 
+// Function to toggle the editable state
+function renamePalette(nameEl) {
+    nameEl.contentEditable = true;
+    el.focus()
+}
+
+// #endregion
 
 //https://github.com/luukdv/color.js/
 
