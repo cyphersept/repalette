@@ -22,16 +22,18 @@ document.getElementById("palette-upload").onchange = function() {uploadFiles(thi
 document.querySelector(".repalette").onclick = function() {repalette(getSelected("image"), getSelected("palette"))};
 
 imagesList.onclick = (event) => {
-    if (event.target.classList.contains("image")) switchSelected(event.target);
+    if (event.target.classList.contains("img-name")) switchSelected(event.target.parentElement);
 }
 
+//TO-DO: bubble up to appropriate parent
 palettesList.onclick = (event) => {
-    if (event.target.classList.contains("rename")) renamePalette(event.target.parentElement);
-    if (event.target.classList.contains("palettes")) switchSelected(event.target);
+    if (event.target.classList.contains("rename")) renamePalette(event.target.parentElement.previousElementSibling);
+    if (event.target.classList.contains("expand")) event.target.parentElement.parentElement.nextElementSibling.classList.toggle("hidden");
+    if (event.target.classList.contains("palette-name")) switchSelected(event.target.parentElement);
 }
 
 palettesList.addEventListener('blur', function(event) {
-    if (event.target.matches('.palette-name')) {
+    if (event.target.matches('.name')) {
         console.log('Palette name edited:', event.target);
         event.target.contentEditable = false;
         // switchSelected(event.target);
@@ -357,8 +359,8 @@ function findIndex(val, arr) {
 //#endregion
 
 function mapPalette(basePalette, newPalette) {
-    const o1 = basePalette.order;
-    const o2 = newPalette.order;
+    const o1 = basePalette.order || Object.values(basePalette.colors);
+    const o2 = newPalette.order || Object.values(newPalette.colors);
     const id = newPalette.id;
     // Map color of basePalette to corresponding in newPalette order
     for (let i = 0; i < basePalette.length; i++) {
@@ -416,7 +418,8 @@ function repalette(imgObj, newPalette, show=true) {
 // region Palette Naming 
 
 // Function to toggle the editable state
-function renamePalette(nameEl) {
+function renamePalette(el) {
+    nameEl = el.querySelector(".name");
     nameEl.contentEditable = true;
     el.focus()
 }
@@ -429,10 +432,9 @@ function renamePalette(nameEl) {
 
 //region To-Do
 /*
-    - debug repalette
+    - debug map palette -> repalette
     - add function for bulk process
     - implement drag and drop
-    - display palettes by name, expand when focused
     - allow color deletion
     - (stretch): color picker
     - (bloat): change amount of allowed colours

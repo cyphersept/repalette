@@ -133,11 +133,9 @@ input[type=text]::placeholder {
     text-align: center;
 }
 
-.img-name { 
+.img-name{ 
     overflow: hidden;
     text-overflow: ellipsis;
-    display: inline-block;
-    width: 100%;
 }
 
 .list > * {
@@ -149,15 +147,40 @@ input[type=text]::placeholder {
     flex-flow: wrap;
     list-style: none;
     gap: 4px;
+    margin-top: 4px;
 }
 .color {
     width: 1rem;
     height: 1rem;
     border-radius: 2px;
 }
+
+.palette-name {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+
+.palette-name .container {
+    position: absolute;
+    right: 0.5rem;
+    gap: 0.25rem;
+}
+.palette-name .custom-btn {
+    width: 1rem;
+    height: 1rem;
+    background-color: var(--b3);
+}
 /*#endregion*/
 
 /*#region Style classes*/
+
+.flex {
+    display: flex;
+}
+
 .vertical {
     flex-flow: column;
 }
@@ -169,6 +192,10 @@ input[type=text]::placeholder {
 
 .center {
     text-align: center;
+}
+
+.hidden {
+    display: none;
 }
 
 .divider {
@@ -184,14 +211,9 @@ input[type=text]::placeholder {
 	border: none;
 	padding: 0;
 	font: inherit;
-	outline: inherit;
+	outline: none;
     font-size: inherit;
     cursor: pointer;
-    /* Somehow this aligns the icons with the text */
-    position: absolute;
-    line-height: 0%;
-    left: -2rem;
-    bottom: 50%; 
     /* Transform behaviour */
     transform: scale(1);
     transition: transform 0.15s ease-in-out;
@@ -199,7 +221,15 @@ input[type=text]::placeholder {
     color: var(--accent2);
 }
 
-.custom-btn::before {  
+.custom-btn.close {
+    /* Somehow this aligns the icons with the text */
+    position: absolute;
+    line-height: 0%;
+    left: -2rem;
+    bottom: 50%; 
+}
+
+.close::before {  
     /* Expands clickable area */
     content: "";
     display: inline-block;
@@ -254,9 +284,9 @@ input[type=text]::placeholder {
     height: var(--h2);
 }
 
-.selected .img-name {
+.selected .img-name, .selected .palette-name {
     background-color: var(--accent1);
-    border-radius: 4px;
+    border-radius: 2px;
 }
 
 .selected {
