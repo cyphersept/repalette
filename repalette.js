@@ -7,7 +7,7 @@
 
 const displayCanvas = document.getElementById("output-canvas");
 const ctx = displayCanvas.getContext("2d", { willReadFrequently: true });
-const displayOriginal = document.querySelector("img.display")
+const displayOriginal = document.querySelector(".display img")
 
 const hiddenCanvas = document.createElement("canvas");
 const htx = hiddenCanvas.getContext("2d", { willReadFrequently: true });
@@ -36,13 +36,56 @@ palettesList.addEventListener('blur', function(event) {
         // switchSelected(event.target);
     }
 }, true); // UseCapture parameter set to true to catch the event in the capturing phase
-
+// Event listeners for image list and palette list sections
 function listClicked(event) {
     if (event.target.classList.contains("close")) deleteObj(event.target.parentElement, event);
     else if (event.target.classList.contains("rename")) renamePalette(event.target.parentElement.previousElementSibling);
     else if (event.target.classList.contains("expand")) event.target.parentElement.parentElement.nextElementSibling.classList.toggle("hidden");
-    else if (event.target.classList.contains("selectable")) switchSelected(event.target);
+    else if (event.target.classList.contains("tab")) switchSelected(event.target.parentElement);
 }
+
+class Scrollable {
+    constructor(el) {
+        this.el = el;
+        this.isDown = false;
+        this.startX = null;
+        this.startY = null;
+        this.scrollLeft = null;
+        this.scrollTop = null;
+
+        el.addEventListener('mousedown', this.startScroll);
+        el.addEventListener('mouseup', this.stopScroll);
+        document.addEventListener('mousemove', this.scroll);
+    }
+
+    startScroll = (event) => {
+        this.isDown = true;
+        this.startX = event.pageX //- this.el.offsetLeft;
+        this.startY = event.pageY //- this.el.offsetTop;
+        this.scrollLeft = this.el.scrollLeft;
+        this.scrollTop = this.el.scrollTop;
+    }
+
+    stopScroll = () => {
+        this.isDown = false;
+    }
+
+    scroll = (event) => {
+        if (!this.isDown) return;
+        event.preventDefault();
+
+        const x = event.pageX //- this.el.offsetLeft;
+        const y = event.pageY //- this.el.offsetTop;
+        const walkX = (x - this.startX) * 1; // Adjust speed here
+        const walkY = (y - this.startY) * 1; // Adjust speed here
+
+        this.el.scrollLeft = this.scrollLeft - walkX;
+        this.el.scrollTop = this.scrollTop - walkY;
+    }
+}
+
+new Scrollable(displayCanvas.parentElement);
+new Scrollable(displayOriginal.parentElement);
 
 // #endregion
 
@@ -122,7 +165,7 @@ function createPaletteNode(obj) {
 // Scans the image for unique colours, generates an index of all values
 function paletteFromImg(imageData){
     const id = Math.floor(Date.now() * Math.random());
-    const palette = {id: id, colors: {}, order:[]};
+    const palette = {id: id, colors: {}, order:[], hasChanged: true};
     const data = imageData.data;
     palettes[id] = palette;
     for (let i = 0; i < data.length; i += 4) {
@@ -377,7 +420,9 @@ function findIndex(val, arr) {
 
 //#endregion
 
-// region Palette Management
+// ============================
+// #region Palette Management
+// ============================
 
 function mapPalette(basePalette, newPalette) {
     const o1 = basePalette.order.length ? basePalette.order : Object.values(basePalette.colors);
@@ -391,16 +436,15 @@ function mapPalette(basePalette, newPalette) {
 
 // Uses palette mappings to generate recolored image
 function repalette(imgObj, newPalette, show=true) {
-
-
     const basePalette = imgObj.defaultPalette;
     const id = newPalette.id;
     let img;
 
-    // If the image has been repaletted before, get the image data
-    if (imgObj.repalettes[id]) {
+    // If the image has been repaletted before and nothing's changed, get the image data
+    if (imgObj.repalettes[id] && !basePalette.hasChanged && !newPalette.hasChanged) {
         img = imgObj.repalettes[id];
     }
+
     // If the image has not been recoloured before, generate the recolor
     else if (!imgObj.repalettes[id]) {
         const data = new Uint8ClampedArray(imgObj.imgData.data);
@@ -423,9 +467,12 @@ function repalette(imgObj, newPalette, show=true) {
                 data[i+2] = newB;
             }
         }
-        // Save imagedata to original image object
+        // Save imagedata to original image object, reset flags
         img = new ImageData(data, imgObj.imgData.width, imgObj.imgData.height);
         imgObj.repalettes[id] = img;
+
+        basePalette.hasChanged = false;
+        newPalette.hasChanged = false;
     }
 
     // Show result on output canvas (optional)
@@ -436,11 +483,35 @@ function repalette(imgObj, newPalette, show=true) {
     }
 }
 
+function deleteCol(palette, colorKey) {
+    delete palette[colorKey];
+    palette.hasChanged = true;
+}
+// #endregion
+
+// ============================
+// #region Export
+// ============================
+
 // Function to toggle the editable state
 function renamePalette(el) {
     nameEl = el.querySelector(".name");
     nameEl.contentEditable = true;
     el.focus()
+}
+
+// Process multiple images
+function bulkProcess(images, palettes) {
+    for (const imgObj of images) {
+        for (const newPal of palettes) {
+            repalette(imgObj, newPal, false);
+        }
+    }
+}
+
+// Save output to computer as img-name_palette-name
+function download(src) {
+
 }
 
 // #endregion
@@ -451,15 +522,17 @@ function renamePalette(el) {
 
 //region To-Do
 /*
-    - display palette of base image
-    - add "has changed" flag for palettes to determine if palette needs to be remapped
     - add function for bulk process
     - implement drag and drop
     - allow color deletion
+    - resolution zoom
+    - modify "hasChanged" flag after palette operations
     - (stretch): color picker
     - (bloat): change amount of allowed colours
 
 Completed:
     - debug paletteMap -> repalette
     - debug palette deletion
+    - display palette of base image
+    - add "has changed" flag for palettes to determine if palette needs to be remapped
 */

@@ -16,7 +16,9 @@
     <main>
         <section class="left-display flex vertical center">
             <h2>Original</h2>
-            <img src="" alt="" class="display">
+            <div class="display">
+                <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACklEQVR4nGNiYAAAAAkAAxvqFQAAAABJRU5ErkJggg==" width="300" height="150" draggable="false">
+            </div>
         </section>
         
         <section class="center-display flex vertical center">
@@ -39,7 +41,9 @@
 
         <section class="right-display flex vertical center">
             <h2>Output</h2>
-            <canvas id="output-canvas" class="display"></canvas>
+            <div class="display">
+                <canvas id="output-canvas"></canvas>
+            </div>
         </section>
         
 
@@ -51,7 +55,7 @@
             </div>
             <div class="selectable image template" hidden>
                 <button type="button" class="close custom-btn">🞪</button>
-                <div class="flex collapse-top img-name">
+                <div class="flex tab img-name">
                     <sp class="name">My File</sp>
                     <div class="flex container">
                         <button class="rename custom-btn"></button>
@@ -71,7 +75,7 @@
             
             <div class="selectable palette template" hidden>
                 <button type="button" class="close custom-btn">🞪</button>
-                <div class="flex collapse-top palette-name">
+                <div class="flex tab palette-name">
                     <sp class="name">My New Palette</sp>
                     <div class="flex container">
                         <button class="rename custom-btn"></button>
