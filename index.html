@@ -49,14 +49,16 @@
             <div class="center">
                 <input type="file" name="" id="img-upload" accept="image/*"  aria-label="Upload Image" multiple>
             </div>
-            <!-- <div class="url-upload">
-                <button type="button" class="enter custom-btn">🢂</button>
-                <input type="text" id="img-url" name="img-url" placeholder="Or enter URL for image..." aria-label="Or enter URL for palette image" data-error="⚠ No valid image linked">
-            </div>
-            <div class="error" hidden>⚠ Not a valid image link</div> -->
-            <div class="image template" hidden>
-                <button type="button" class="close custom-btn" onclick="deleteImage(this.parentNode, event)">🞪</button>
-                <div class="img-name">filename</div>
+            <div class="selectable image template" hidden>
+                <button type="button" class="close custom-btn">🞪</button>
+                <div class="flex collapse-top img-name">
+                    <sp class="name">My File</sp>
+                    <div class="flex container">
+                        <button class="rename custom-btn"></button>
+                        <button class="expand custom-btn"></button>
+                    </div>
+                </div>
+                <ul class="flex color-list hidden"></ul>
             </div>
         </section>
         
@@ -67,14 +69,9 @@
                 <input type="file" id="palette-upload" name="palette-upload" accept="image/*" aria-label="Upload palette image" multiple>
             </div>
             
-            <!-- <div class="url-upload">
-                <button type="button" class="enter custom-btn">🢂</button>
-                <input type="text" id="palette-url" name="palette-url" placeholder="Or enter URL for palette image..." aria-label="Or enter URL for palette image">
-            </div>
-            <div class="error" hidden>⚠ Not a valid image link</div> -->
-            <div class="palette template" hidden>
-                <button type="button" class="close custom-btn" onclick="deleteImage(this.parentNode, event)">🞪</button>
-                <div class="flex palette-name">
+            <div class="selectable palette template" hidden>
+                <button type="button" class="close custom-btn">🞪</button>
+                <div class="flex collapse-top palette-name">
                     <sp class="name">My New Palette</sp>
                     <div class="flex container">
                         <button class="rename custom-btn"></button>
