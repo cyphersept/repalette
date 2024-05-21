@@ -19,6 +19,8 @@ const palettesList = document.querySelector(".palettes.list");
 const imgTemplate = document.querySelector(".image.template");
 const paletteTemplate = document.querySelector(".palette.template");
 
+htx.imageSmoothingEnabled = false;
+ctx.imageSmoothingEnabled = false;
 document.getElementById("img-upload").onchange = function() {uploadFiles(this, "image")};
 document.getElementById("palette-upload").onchange = function() {uploadFiles(this, "palette")};
 //document.querySelector(".palettes .btn").onclick = function() {uploadPalette(this.nextElementSibling)}
@@ -40,7 +42,7 @@ palettesList.addEventListener('blur', function(event) {
 function listClicked(event) {
     if (event.target.classList.contains("close")) deleteObj(event.target.parentElement, event);
     else if (event.target.classList.contains("rename")) renamePalette(event.target.parentElement.previousElementSibling);
-    else if (event.target.classList.contains("expand")) event.target.parentElement.parentElement.nextElementSibling.classList.toggle("hidden");
+    else if (event.target.classList.contains("expand")) event.target.parentElement.parentElement.classList.toggle("expanded");
     else if (event.target.classList.contains("tab")) switchSelected(event.target.parentElement);
 }
 
@@ -128,7 +130,6 @@ function addPalette(file) {
                 if (img.width > 0) {
                     palette = paletteFromImg(loadImageToCanvas(img, hiddenCanvas, htx));
                     palette.node = createPaletteNode(palette);
-                    palettesList.appendChild(palette.node);
                     resolve(palette); // Resolve the promise with the palette object
                 } else {
                     reject(new Error("Image width is 0"));
@@ -152,20 +153,32 @@ function createPaletteNode(obj) {
     el.classList.remove("template");
     el.hidden = false;
 
-    // Display each color in palette
+    initColorList(obj, ul);
+    palettesList.appendChild(el);
+    return el;
+}
+
+// Display each color in palette
+function initColorList(obj, ul) {
     for (const key in obj.colors) {
         const li = document.createElement("li");
         li.classList.add("color");
         li.dataset.key = key;
         li.style.backgroundColor = `rgb(${li.dataset.key})`
+        obj.colors[key].node = li;
         ul.appendChild(li);
     }
-    return el;
+    obj.sortable = Sortable.create(ul, {
+        animation: 50,
+        easing: "cubic-bezier(0.65, 0, 0.35, 1)",
+        onSort: function () {obj.hasChanged = true}
+    })
 }
+
 // Scans the image for unique colours, generates an index of all values
 function paletteFromImg(imageData){
     const id = Math.floor(Date.now() * Math.random());
-    const palette = {id: id, colors: {}, order:[], hasChanged: true};
+    const palette = {id: id, colors: {}, sortable: {}, hasChanged: true};
     const data = imageData.data;
     palettes[id] = palette;
     for (let i = 0; i < data.length; i += 4) {
@@ -248,15 +261,9 @@ function createImgNode(obj) {
     el.dataset.objKey = obj.name;
     el.classList.remove("template");
     el.hidden = false
-
-    for (const key in obj.defaultPalette.colors) {
-        const li = document.createElement("li");
-        li.classList.add("color");
-        li.dataset.key = key;
-        li.style.backgroundColor = `rgb(${li.dataset.key})`
-        ul.appendChild(li);
-    }
-
+    obj.defaultPalette.node = ul;
+    
+    initColorList(obj.defaultPalette, ul);
     imagesList.appendChild(el);
     return el;
 }
@@ -295,8 +302,10 @@ function deleteObj(el, event) {
     el.remove();
 }
 
-// #endregion
-
+function getMaxScale(srcWidth, srcHeight, maxWidth, maxHeight) {
+    const scalar = Math.min(parseFloat(maxWidth) / srcWidth, parseFloat(maxHeight) / srcHeight);
+    return Math.max(1, scalar);
+}
 
 // Also converts image to canvas API data
 function loadImageToCanvas(img, canvas, context, returnData = true) {
@@ -314,23 +323,38 @@ function loadImageToCanvas(img, canvas, context, returnData = true) {
 
 //Toggles selected element in same parent group
 function switchSelected(next) {
-    if (!next) return;
+    if (!next || next.classList.contains("template")) return false;
     const prev = next.parentElement.querySelector(".selected");
 
+    if (!prev) {
+        displayOriginal.classList.remove("initial");
+        displayCanvas.classList.remove("initial");
+    }
     // Highlights selected object in list
-    if (prev) prev.classList.toggle("selected");
+    else prev.classList.toggle("selected");
     next.classList.toggle("selected");
 
     // Displays selected image
     if (next.classList.contains("image")) {
         const obj = images[next.dataset.objKey];
+
+        // Calculate the maximum scale
+        const scalar = getMaxScale(
+            obj.img.width,
+            obj.img.height,
+            window.getComputedStyle(displayOriginal).getPropertyValue('max-width'),
+            window.getComputedStyle(displayOriginal).getPropertyValue('max-height')
+        );
+
         // Changes left display
         displayOriginal.src = obj.img.src;
-        displayOriginal.width = obj.img.width;
-        displayOriginal.height = obj.img.height;
+        displayOriginal.style.width = `${scalar * obj.img.width}px`;
+        displayOriginal.style.aspectRatio = obj.img.width / obj.img.height;
+        
         // Changes right display according to selected palette
         loadImageToCanvas(obj.img, displayCanvas, ctx, false);
-        
+        displayCanvas.style.width = displayOriginal.style.width;
+        displayCanvas.style.aspectRatio = displayOriginal.style.aspectRatio;
     }
 }
 
@@ -425,12 +449,16 @@ function findIndex(val, arr) {
 // ============================
 
 function mapPalette(basePalette, newPalette) {
-    const o1 = basePalette.order.length ? basePalette.order : Object.values(basePalette.colors);
-    const o2 = newPalette.order.length ? newPalette.order : Object.values(newPalette.colors);
+    const o1 = basePalette.sortable.el.children;
+    const o2 = newPalette.sortable.el.children;
     const id = newPalette.id;
+
     // Map color of basePalette to corresponding in newPalette order
     for (let i = 0; i < o1.length; i++) {
-        if (o2[i]) o1[i].remaps[id] = o2[i];
+        if (!o2[i]) break // Stop if there are no more new colors
+        const key1 = o1[i].dataset.key;
+        const key2 = o2[i].dataset.key;
+        basePalette.colors[key1].remaps[id] = newPalette.colors[key2];
     }
 }
 
@@ -522,11 +550,10 @@ function download(src) {
 
 //region To-Do
 /*
+    - debug rename
+    - export function
     - add function for bulk process
-    - implement drag and drop
     - allow color deletion
-    - resolution zoom
-    - modify "hasChanged" flag after palette operations
     - (stretch): color picker
     - (bloat): change amount of allowed colours
 
@@ -535,4 +562,8 @@ Completed:
     - debug palette deletion
     - display palette of base image
     - add "has changed" flag for palettes to determine if palette needs to be remapped
+    - implement click and drag scrolling for canvases
+    - implement drag and drop
+    - implemented crisp rescale, but no more canvas scrolling
+    - menu buttons set
 */

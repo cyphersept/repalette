@@ -17,7 +17,7 @@
         <section class="left-display flex vertical center">
             <h2>Original</h2>
             <div class="display">
-                <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACklEQVR4nGNiYAAAAAkAAxvqFQAAAABJRU5ErkJggg==" width="300" height="150" draggable="false">
+                <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACklEQVR4nGNiYAAAAAkAAxvqFQAAAABJRU5ErkJggg==" class="initial" draggable="false">
             </div>
         </section>
         
@@ -42,7 +42,7 @@
         <section class="right-display flex vertical center">
             <h2>Output</h2>
             <div class="display">
-                <canvas id="output-canvas"></canvas>
+                <canvas id="output-canvas" class="initial"></canvas>
             </div>
         </section>
         
@@ -62,7 +62,7 @@
                         <button class="expand custom-btn"></button>
                     </div>
                 </div>
-                <ul class="flex color-list hidden"></ul>
+                <ul class="flex color-list"></ul>
             </div>
         </section>
         
@@ -82,7 +82,7 @@
                         <button class="expand custom-btn"></button>
                     </div>
                 </div>
-                <ul class="flex color-list hidden"></ul>
+                <ul class="flex color-list"></ul>
             </div>
         </section>
 
@@ -92,6 +92,7 @@
         To preserve a specific order for the source image's palette, embed it in the top left corner of the image.
     </div>
     <footer class="center"> Created by</footer>
+    <script src="Sortable.js"></script>
     <script src="repalette.js"></script> 
 </body>
 </html>
