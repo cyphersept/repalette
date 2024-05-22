@@ -21,31 +21,40 @@ const paletteTemplate = document.querySelector(".palette.template");
 
 htx.imageSmoothingEnabled = false;
 ctx.imageSmoothingEnabled = false;
+
 document.getElementById("img-upload").onchange = function() {uploadFiles(this, "image")};
 document.getElementById("palette-upload").onchange = function() {uploadFiles(this, "palette")};
-//document.querySelector(".palettes .btn").onclick = function() {uploadPalette(this.nextElementSibling)}
 
 document.querySelector(".repalette").onclick = function() {repalette(getSelected("image"), getSelected("palette"))};
+document.querySelector(".export").onclick  = function() {download(getSelected("image"), getSelected("palette"))}
 
-//TO-DO: bubble up to appropriate parent
 imagesList.onclick = (event) => {listClicked(event)};
 palettesList.onclick = (event) => {listClicked(event)};
+imagesList.addEventListener('blur', (event) => lockName(event, "image"), true);
+palettesList.addEventListener('blur', (event) => lockName(event, "palette"), true);
 
-palettesList.addEventListener('blur', function(event) {
-    if (event.target.matches('.name')) {
-        console.log('Palette name edited:', event.target);
-        event.target.contentEditable = false;
-        // switchSelected(event.target);
-    }
-}, true); // UseCapture parameter set to true to catch the event in the capturing phase
 // Event listeners for image list and palette list sections
 function listClicked(event) {
-    if (event.target.classList.contains("close")) deleteObj(event.target.parentElement, event);
-    else if (event.target.classList.contains("rename")) renamePalette(event.target.parentElement.previousElementSibling);
-    else if (event.target.classList.contains("expand")) event.target.parentElement.parentElement.classList.toggle("expanded");
-    else if (event.target.classList.contains("tab")) switchSelected(event.target.parentElement);
+    const el = event.target
+    if (el.matches(".close")) deleteObj(el.parentElement, event);
+    else if (el.matches(".rename")) renamePalette(el.parentElement.parentElement);
+    else if (el.matches(".expand")) el.parentElement.parentElement.classList.toggle("expanded");
+    else if (el.matches(".tab")) switchSelected(el.parentElement);
+    else if (el.matches(".name")) switchSelected(el.parentElement.parentElement);
 }
 
+function lockName(event, type) {
+    if (event.target.matches(".name")) {
+        const typeObj = (type == "image") ? images : palettes;
+        const key = event.target.parentElement.parentElement.dataset.objKey;
+        let str = event.target.textContent;
+        console.log('Palette name edited at:', event.target);
+        str = str.replace(/^\s+|\s+$/g, '');
+        event.target.contentEditable = false;
+        typeObj[key].name = str;
+    }
+}
+// Implements click and drag scrolling for large canvases
 class Scrollable {
     constructor(el) {
         this.el = el;
@@ -97,7 +106,7 @@ new Scrollable(displayOriginal.parentElement);
 
 // Process user-uploaded palette from file or URL
 async function uploadFiles(input, type) {
-    const arr = (type == "image")? images : palettes;
+    const arr = (type == "image") ? images : palettes;
     let last;
 
     // Upload/update image only if it has changed
@@ -129,6 +138,7 @@ function addPalette(file) {
             img.onload = () => {
                 if (img.width > 0) {
                     palette = paletteFromImg(loadImageToCanvas(img, hiddenCanvas, htx));
+                    palette.name = file.name + " Palette";
                     palette.node = createPaletteNode(palette);
                     resolve(palette); // Resolve the promise with the palette object
                 } else {
@@ -151,7 +161,7 @@ function createPaletteNode(obj) {
     const ul = el.querySelector(".color-list");
     el.dataset.objKey = obj.id;
     el.classList.remove("template");
-    el.hidden = false;
+    el.querySelector(".name").textContent = obj.name
 
     initColorList(obj, ul);
     palettesList.appendChild(el);
@@ -260,7 +270,6 @@ function createImgNode(obj) {
     el.querySelector(".name").textContent = obj.name;
     el.dataset.objKey = obj.name;
     el.classList.remove("template");
-    el.hidden = false
     obj.defaultPalette.node = ul;
     
     initColorList(obj.defaultPalette, ul);
@@ -273,7 +282,7 @@ function deleteObj(el, event) {
     event.stopPropagation();
 
     // Delete image
-    if (el.classList.contains("image")) {
+    if (el.matches(".image")) {
         const obj = images[el.dataset.objKey];
 
         delete palettes[obj.defaultPalette.id];
@@ -295,8 +304,8 @@ function deleteObj(el, event) {
     }
 
     // If currently selected, switch to new selected 
-    if (el.classList.contains("selected")) {
-        const next = !el.nextElementSibling ? el.previousElementSibling : el.nextElementSibling;
+    if (el.matches(".selected")) {
+        const next = el?.nextElementSibling ?? el.previousElementSibling;
         switchSelected(next);
     }
     el.remove();
@@ -304,7 +313,7 @@ function deleteObj(el, event) {
 
 function getMaxScale(srcWidth, srcHeight, maxWidth, maxHeight) {
     const scalar = Math.min(parseFloat(maxWidth) / srcWidth, parseFloat(maxHeight) / srcHeight);
-    return Math.max(1, scalar);
+    return Math.max(1, Math.floor(scalar));
 }
 
 // Also converts image to canvas API data
@@ -323,7 +332,7 @@ function loadImageToCanvas(img, canvas, context, returnData = true) {
 
 //Toggles selected element in same parent group
 function switchSelected(next) {
-    if (!next || next.classList.contains("template")) return false;
+    if (!next || next.matches(".template")) return false;
     const prev = next.parentElement.querySelector(".selected");
 
     if (!prev) {
@@ -335,7 +344,7 @@ function switchSelected(next) {
     next.classList.toggle("selected");
 
     // Displays selected image
-    if (next.classList.contains("image")) {
+    if (next.matches(".image")) {
         const obj = images[next.dataset.objKey];
 
         // Calculate the maximum scale
@@ -359,9 +368,13 @@ function switchSelected(next) {
 }
 
 function getSelected(type) {
-    if (type == "image") return images[imagesList.querySelector(".selected").dataset.objKey];
-    else if (type == "palette") return palettes[palettesList.querySelector(".selected").dataset.objKey];
-    else console.log("Invalid type for getSelected()")
+    let val;
+    switch (type) {
+        case "image": val = images[imagesList.querySelector(".selected")?.dataset.objKey]; break;
+        case "palette": val = palettes[palettesList.querySelector(".selected")?.dataset.objKey]; break;
+        default: console.log("Type for getSelected() must be 'image' or 'palette'");
+    }
+    return val || false;
 }
 
 
@@ -473,8 +486,8 @@ function repalette(imgObj, newPalette, show=true) {
         img = imgObj.repalettes[id];
     }
 
-    // If the image has not been recoloured before, generate the recolor
-    else if (!imgObj.repalettes[id]) {
+    // Generate a new recolor
+    else {
         const data = new Uint8ClampedArray(imgObj.imgData.data);
         mapPalette(basePalette, newPalette);
     
@@ -525,7 +538,7 @@ function deleteCol(palette, colorKey) {
 function renamePalette(el) {
     nameEl = el.querySelector(".name");
     nameEl.contentEditable = true;
-    el.focus()
+    nameEl.focus();
 }
 
 // Process multiple images
@@ -538,8 +551,11 @@ function bulkProcess(images, palettes) {
 }
 
 // Save output to computer as img-name_palette-name
-function download(src) {
-
+function download(imgObj, paletteObj) {
+    const a = document.getElementById('download-single');
+    a.setAttribute('download', imgObj.name + "_" + paletteObj.name);
+    a.setAttribute('href', displayCanvas.toDataURL("image/png").replace("image/png", "image/octet-stream"));
+    a.click();
 }
 
 // #endregion
@@ -550,8 +566,6 @@ function download(src) {
 
 //region To-Do
 /*
-    - debug rename
-    - export function
     - add function for bulk process
     - allow color deletion
     - (stretch): color picker
@@ -566,4 +580,6 @@ Completed:
     - implement drag and drop
     - implemented crisp rescale, but no more canvas scrolling
     - menu buttons set
+    - debug rename
+    - export function
 */

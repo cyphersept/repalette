@@ -37,6 +37,10 @@
                     </g>
                 </svg>
             </button>
+            <button type="button" class="export">
+                <svg fill="none" viewBox="0 0 24.00 24.00" xmlns="http://www.w3.org/2000/svg" stroke="none" stroke-width="1.2"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"><path d="M7.293,13.707a1,1,0,1,1,1.414-1.414L11,14.586V3a1,1,0,0,1,2,0V14.586l2.293-2.293a1,1,0,0,1,1.414,1.414l-4,4a1,1,0,0,1-.325.216.986.986,0,0,1-.764,0,1,1,0,0,1-.325-.216ZM22,12a1,1,0,0,0-1,1v7H3V13a1,1,0,0,0-2,0v8a1,1,0,0,0,1,1H22a1,1,0,0,0,1-1V13A1,1,0,0,0,22,12Z"></path></g></svg>
+                <a id="download-single"></a>
+            </button>
         </section>
 
         <section class="right-display flex vertical center">
@@ -50,16 +54,16 @@
         <section class="images list flex vertical center">
             <h3>Images</h3>
             <div class="divider"></div>
-            <div class="center">
+            <div class="upload center">
                 <input type="file" name="" id="img-upload" accept="image/*"  aria-label="Upload Image" multiple>
             </div>
-            <div class="selectable image template" hidden>
+            <div class="selectable image template">
                 <button type="button" class="close custom-btn">🞪</button>
                 <div class="flex tab img-name">
                     <sp class="name">My File</sp>
                     <div class="flex container">
-                        <button class="rename custom-btn"></button>
                         <button class="expand custom-btn"></button>
+                        <button class="rename custom-btn"></button>
                     </div>
                 </div>
                 <ul class="flex color-list"></ul>
@@ -69,17 +73,17 @@
         <section class="palettes list flex vertical center">
             <h3>Palettes</h3>
             <div class="divider"></div>
-            <div class="center">
+            <div class="upload center">
                 <input type="file" id="palette-upload" name="palette-upload" accept="image/*" aria-label="Upload palette image" multiple>
             </div>
             
-            <div class="selectable palette template" hidden>
+            <div class="selectable palette template">
                 <button type="button" class="close custom-btn">🞪</button>
                 <div class="flex tab palette-name">
-                    <sp class="name">My New Palette</sp>
+                    <sp class="name"></sp>
                     <div class="flex container">
-                        <button class="rename custom-btn"></button>
                         <button class="expand custom-btn"></button>
+                        <button class="rename custom-btn"></button>
                     </div>
                 </div>
                 <ul class="flex color-list"></ul>
@@ -93,6 +97,7 @@
     </div>
     <footer class="center"> Created by</footer>
     <script src="Sortable.js"></script>
+    <script src="jszip.js"></script>
     <script src="repalette.js"></script> 
 </body>
 </html>
