@@ -26,7 +26,11 @@ document.getElementById("img-upload").onchange = function() {uploadFiles(this, "
 document.getElementById("palette-upload").onchange = function() {uploadFiles(this, "palette")};
 
 document.querySelector(".repalette").onclick = function() {repalette(getSelected("image"), getSelected("palette"))};
-document.querySelector(".export").onclick  = function() {download(getSelected("image"), getSelected("palette"))}
+document.querySelector(".export").onclick  = function() {
+    if (document.getElementById("single").checked) download(getSelected("image"), getSelected("palette"));
+    else if (document.getElementById("pAll").checked) multiDownload(false);
+    else if (document.getElementById("imgAll-pAll").checked) multiDownload(true);
+}
 
 imagesList.onclick = (event) => {listClicked(event)};
 palettesList.onclick = (event) => {listClicked(event)};
@@ -186,11 +190,11 @@ function initColorList(obj, ul) {
 }
 
 // Scans the image for unique colours, generates an index of all values
-function paletteFromImg(imageData){
+function paletteFromImg(imageData, saveGlobally = true){
     const id = Math.floor(Date.now() * Math.random());
     const palette = {id: id, colors: {}, sortable: {}, hasChanged: true};
     const data = imageData.data;
-    palettes[id] = palette;
+    if (saveGlobally) palettes[id] = palette;
     for (let i = 0; i < data.length; i += 4) {
         // Use rgb string as key (Different alphas are ignored)
         const rgbKey = [data[i], data[i+1], data[i+2]].toString();   
@@ -242,7 +246,7 @@ function addImage(file) {
                 obj.date = file.lastModified;
                 obj.img = img;
                 obj.imgData = loadImageToCanvas(img, hiddenCanvas, htx);
-                obj.defaultPalette = paletteFromImg(obj.imgData);
+                obj.defaultPalette = paletteFromImg(obj.imgData, false);
                 obj.repalettes = {}; // Stores imgData of processed alt palettes
 
                 // If the file is new, append an element to the DOM
@@ -301,6 +305,9 @@ function deleteObj(el, event) {
             delete images[key].repalettes[id];
         }
         delete palettes[id];
+
+        // Resets output canvas to default palette
+        loadImageToCanvas(getSelected("image").img, displayCanvas, ctx)
     }
 
     // If currently selected, switch to new selected 
@@ -317,17 +324,19 @@ function getMaxScale(srcWidth, srcHeight, maxWidth, maxHeight) {
 }
 
 // Also converts image to canvas API data
-function loadImageToCanvas(img, canvas, context, returnData = true) {
+function loadImageToCanvas(img, canvas, context, customData = false, returns = "imagedata") {
     canvas.width = img.naturalWidth;
     canvas.height = img.naturalHeight;
     context.clearRect(0, 0, canvas.width, canvas.height);
-    context.drawImage(img, 0, 0, canvas.width, canvas.height);
+    if (customData) context.putImageData(customData, 0, 0)
+    else context.drawImage(img, 0, 0, canvas.width, canvas.height);
     
-    if (returnData) {
+    if (returns == "imagedata") {
         let imgData = context.getImageData(0, 0, canvas.width, canvas.height);
         console.log(imgData);
         return imgData;
     }
+    else if (returns == "canvas") return canvas;
 }
 
 //Toggles selected element in same parent group
@@ -365,6 +374,15 @@ function switchSelected(next) {
         displayCanvas.style.width = displayOriginal.style.width;
         displayCanvas.style.aspectRatio = displayOriginal.style.aspectRatio;
     }
+
+    // If the newly-selected palette has already been repaletted, display automatically
+    if (next.matches(".palette") || next.matches(".image")) {
+        const id = getSelected("palette")?.id;
+        const imgObj = getSelected("image");
+        if (imgObj?.repalettes[id]) {
+            ctx.putImageData(imgObj.repalettes[id], 0, 0);
+        }
+    }
 }
 
 function getSelected(type) {
@@ -379,13 +397,13 @@ function getSelected(type) {
 
 
 // ============================
-// #region Palette Sorting
+// #region (Unused) Palette Sorting
 // ============================
 
 // !TO-DO: make blocks take user-inputted value from field
 function sortPalette(palette, blocks, el) {
     const arr = Object.values(palette)
-    arr.sort((a, b, blocks) => {
+    arr.sort((a, b) => {
         let hsvA = step(a.r, a.g, a.b, blocks);
         let hsvB = step(b.r, b.g, b.b, blocks);
 
@@ -425,7 +443,7 @@ function rgbToHsv(r, g, b) {
         h /= 6;
     }
 
-    return [ h, s, v ];
+    return { h: h, s: s, v: v };
 }
 
 // Implemented using step-sort from https://www.alanzucconi.com/2015/09/30/colour-sorting/#google_vignette 
@@ -433,14 +451,14 @@ function step(r, g, b, blocks = 1) {
     const lum = math.sqrt( .241 * r + .691 * g + .068 * b )
     const hsv = rgbToHsv(r, g, b)
 
-    h2 = int(h * blocks)
+    h2 = int(hsv.h * blocks)
     lum2 = int(lum * blocks)
-    v2 = int(v * blocks)
+    v2 = int(hsv.v * blocks)
 
     return (h2, lum, v2)
 }
 
-
+// Unused function for sorting
 function findIndex(val, arr) {
     var lower = 0;
     var upper = arr.length;
@@ -476,7 +494,7 @@ function mapPalette(basePalette, newPalette) {
 }
 
 // Uses palette mappings to generate recolored image
-function repalette(imgObj, newPalette, show=true) {
+function repalette(imgObj, newPalette, showContext = ctx) {
     const basePalette = imgObj.defaultPalette;
     const id = newPalette.id;
     let img;
@@ -516,11 +534,12 @@ function repalette(imgObj, newPalette, show=true) {
         newPalette.hasChanged = false;
     }
 
-    // Show result on output canvas (optional)
-    if (show) {
-        ctx.width = img.width;
-        ctx.height = img.height;
-        ctx.putImageData(img, 0, 0)
+    // Show result on given canvas context (optional)
+    if (showContext) {
+        showContext.width = img.width;
+        showContext = img.height;
+        showContext.putImageData(img, 0, 0)
+        return showContext.canvas;
     }
 }
 
@@ -558,6 +577,38 @@ function download(imgObj, paletteObj) {
     a.click();
 }
 
+function multiDownload(allImages) {
+    const zip = new JSZip();
+    const selectedImg = (allImages) ? false : getSelected("image");
+    const zipName = (allImages) ? repalettes : selectedImg.name;
+
+    // Populates ZIP
+    const addPalettesOfImgToZIP = function (imgObj) {
+        for (const id in palettes) {
+            // Fetch the repalette for this image + palette, or create it
+            const folder = zip.folder(imgObj.name);
+            const getCanvas = (imgObj.repalettes[id]) 
+                ? loadImageToCanvas(imgObj.img, hiddenCanvas, htx, imgObj.repalettes[id], "canvas") 
+                : repalette(imgObj, palettes[id], htx);
+            // Adds blobbed canvas to zip
+            new Promise((resolve) => {
+                getCanvas.toBlob(function(blob) {
+                    // On success, add the blob to the folder and resolve the promise
+                    folder.file(`${imgObj.name}_${palettes[id].name}`, blob);
+                    resolve();
+                });
+            });
+        }
+    };
+
+    // Save zip to user files
+    if (allImages) {for (const imgObj of images.values()) {addPalettesOfImgToZIP(imgObj)}}
+    else {addPalettesOfImgToZIP(selectedImg)}
+    zip.generateAsync({type:"blob"}).then(function (blob) {
+        saveAs(blob, zipName);
+    });
+}
+
 // #endregion
 
 //https://github.com/luukdv/color.js/
@@ -567,8 +618,12 @@ function download(imgObj, paletteObj) {
 //region To-Do
 /*
     - add function for bulk process
+    - test palette deletion
+    - palette numbering
+    - remove img after palette deleted
     - allow color deletion
     - (stretch): color picker
+    - (stretch): save current palettes as img, config palettes from img
     - (bloat): change amount of allowed colours
 
 Completed:
