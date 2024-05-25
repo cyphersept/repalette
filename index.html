@@ -17,7 +17,7 @@
         <section class="left-display flex vertical center">
             <h2>Original</h2>
             <div class="display">
-                <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACklEQVR4nGNiYAAAAAkAAxvqFQAAAABJRU5ErkJggg==" class="initial" draggable="false">
+                <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQIW2NgAAIAAAUAAR4f7BQAAAAASUVORK5CYII=" class="initial" draggable="false">
             </div>
         </section>
         
@@ -39,14 +39,22 @@
             </button>
             <button type="button" class="export">
                 <svg fill="none" viewBox="0 0 24.00 24.00" xmlns="http://www.w3.org/2000/svg" stroke="none" stroke-width="1.2"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"><path d="M7.293,13.707a1,1,0,1,1,1.414-1.414L11,14.586V3a1,1,0,0,1,2,0V14.586l2.293-2.293a1,1,0,0,1,1.414,1.414l-4,4a1,1,0,0,1-.325.216.986.986,0,0,1-.764,0,1,1,0,0,1-.325-.216ZM22,12a1,1,0,0,0-1,1v7H3V13a1,1,0,0,0-2,0v8a1,1,0,0,0,1,1H22a1,1,0,0,0,1-1V13A1,1,0,0,0,22,12Z"></path></g></svg>
-                <a id="download-single"></a>
             </button>
-            <input checked required type="radio" id="single" name="export-options">
-            <label for="single">Current image and palette</label><br>
-            <input type="radio" id="pAll" name="export-options">
-            <label for="pAll">Selected image, all palettes</label><br>
-            <input type="radio" id="imgAll-pAll" name="export-options">
-            <label for="imgAll-pAll">All images, all palettes</label>
+            <a id="download-single"></a>
+            <div class="flex vertical radios">
+                <div>
+                    <input checked required type="radio" id="single" name="export-options">
+                    <label for="single">Current image and palette</label><br>
+                </div>
+                <div>
+                    <input type="radio" id="pAll" name="export-options">
+                    <label for="pAll">Current image all palettes</label><br>
+                </div>
+                <div>
+                    <input type="radio" id="imgAll-pAll" name="export-options">
+                    <label for="imgAll-pAll">All images all palettes</label>
+                </div>
+            </div>
         </section>
 
         <section class="right-display flex vertical center">

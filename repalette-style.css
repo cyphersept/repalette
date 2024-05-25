@@ -61,11 +61,10 @@ main {
     color: var(--light1);
     flex-grow: 1;
     display: grid;
-    grid-template-columns: 1fr 7rem 1fr;
+    grid-template-columns: minmax(0, 1fr) fit-content(32ch) minmax(0, 1fr);
     row-gap: 1.5rem;
     padding: 1.5rem;
     grid-template-rows: auto auto;
-    align-items: center;
 }
 
 header{
@@ -177,7 +176,7 @@ footer {
 .initial {
     width: 200px;
     height: 150px;
-}
+} 
 
 /*#endregion*/
 
@@ -188,6 +187,7 @@ footer {
 
 .center-display {
     grid-area: 1 / 2 / 2 / 3;
+    align-self: center;
 }
 
 .right-display {
@@ -202,7 +202,7 @@ footer {
     outline: 4px dashed var(--light1);
     outline-offset: 4px;
     overflow: scroll;
-    max-width: 40vw;
+    max-width: calc(100% - 1rem);
     max-height: 60vh;
     image-rendering: pixelated;
     object-fit: cover;
@@ -234,6 +234,11 @@ footer {
     border-color: var(--light2);
 }
 
+.radios {
+    gap: 0.2rem;
+    padding: 0 1.5rem;
+    margin-top: -0.75rem;
+}
 /*#endregion*/
 
 /*#region Lists*/
@@ -253,16 +258,15 @@ footer {
     position: relative;
 }
 
-.upload {
-    margin-bottom: 1rem;
-}
 input[type=text] {   
     width: 100%;
     background-color: var(--light1);
     border-color: var(--light1);
     border-radius: 0.2em;
     margin: 0.25rem 0;
-
+    overflow: hidden;
+    text-overflow: ellipsis;
+    overflow-wrap: break-word;
 }
 
 input[type=text]::placeholder {
@@ -270,13 +274,21 @@ input[type=text]::placeholder {
     text-align: center;
 }
 
-.img-name{ 
+.name, .upload { 
     overflow: hidden;
     text-overflow: ellipsis;
+    text-wrap: nowrap;
+    overflow-wrap: break-word;
+    padding-inline: 2.75rem;
+}
+
+.upload {
+    margin-bottom: 0.5rem;
+    padding-inline: 0;
 }
 
 .list > * {
-    width: clamp(16rem, 75%, 32rem)
+    width: clamp(16rem, 75%, 75%)
 }
 
 .color-list {

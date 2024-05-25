@@ -192,7 +192,7 @@ function initColorList(obj, ul) {
 // Scans the image for unique colours, generates an index of all values
 function paletteFromImg(imageData, saveGlobally = true){
     const id = Math.floor(Date.now() * Math.random());
-    const palette = {id: id, colors: {}, sortable: {}, hasChanged: true};
+    const palette = {id: id, colors: {}, sortable: {}, hasChanged: false};
     const data = imageData.data;
     if (saveGlobally) palettes[id] = palette;
     for (let i = 0; i < data.length; i += 4) {
@@ -357,30 +357,32 @@ function switchSelected(next) {
         const obj = images[next.dataset.objKey];
 
         // Calculate the maximum scale
-        const scalar = getMaxScale(
-            obj.img.width,
-            obj.img.height,
-            window.getComputedStyle(displayOriginal).getPropertyValue('max-width'),
-            window.getComputedStyle(displayOriginal).getPropertyValue('max-height')
-        );
+        // const scalar = getMaxScale(
+        //     obj.img.width,
+        //     obj.img.height,
+        //     window.getComputedStyle(displayOriginal).getPropertyValue('max-width'),
+        //     window.getComputedStyle(displayOriginal).getPropertyValue('max-height')
+        // );
 
         // Changes left display
         displayOriginal.src = obj.img.src;
-        displayOriginal.style.width = `${scalar * obj.img.width}px`;
+        //displayOriginal.style.width = `${scalar * obj.img.width}px`;
         displayOriginal.style.aspectRatio = obj.img.width / obj.img.height;
         
-        // Changes right display according to selected palette
+        // Changes right display to default palette
         loadImageToCanvas(obj.img, displayCanvas, ctx, false);
-        displayCanvas.style.width = displayOriginal.style.width;
+        //displayCanvas.style.width = displayOriginal.style.width;
         displayCanvas.style.aspectRatio = displayOriginal.style.aspectRatio;
+        displayCanvas.dataset.repaletteId = obj.defaultPalette.id
     }
 
-    // If the newly-selected palette has already been repaletted, display automatically
+    // Displays selected palette: if already repaletted, display automatically
     if (next.matches(".palette") || next.matches(".image")) {
         const id = getSelected("palette")?.id;
         const imgObj = getSelected("image");
         if (imgObj?.repalettes[id]) {
             ctx.putImageData(imgObj.repalettes[id], 0, 0);
+            displayCanvas.dataset.repaletteId = id;
         }
     }
 }
@@ -495,53 +497,57 @@ function mapPalette(basePalette, newPalette) {
 
 // Uses palette mappings to generate recolored image
 function repalette(imgObj, newPalette, showContext = ctx) {
-    const basePalette = imgObj.defaultPalette;
-    const id = newPalette.id;
-    let img;
+    return new Promise((resolve) => {
+        const basePalette = imgObj.defaultPalette;
+        const id = newPalette.id;
+        let img;
 
-    // If the image has been repaletted before and nothing's changed, get the image data
-    if (imgObj.repalettes[id] && !basePalette.hasChanged && !newPalette.hasChanged) {
-        img = imgObj.repalettes[id];
-    }
+        // If the image has been repaletted before and nothing's changed, get the image data
+        if (imgObj.repalettes[id] &&!basePalette.hasChanged &&!newPalette.hasChanged) {
+            img = imgObj.repalettes[id];
+            // If the repalette is already on the canvas, do nothing
+            if (displayCanvas.dataset.repaletteId == id) {
+                resolve(showContext? showContext.canvas : null);
+                return;
+            }
+        } else {
+            const data = new Uint8ClampedArray(imgObj.imgData.data);
+            mapPalette(basePalette, newPalette);
 
-    // Generate a new recolor
-    else {
-        const data = new Uint8ClampedArray(imgObj.imgData.data);
-        mapPalette(basePalette, newPalette);
-    
-        for (const key in basePalette.colors) {
-            // Skip if the color has not been mapped
-            const baseCol = basePalette.colors[key];
-            if (!baseCol.remaps[id]) {
-                continue;
+            for (const key in basePalette.colors) {
+                const baseCol = basePalette.colors[key];
+                if (!baseCol.remaps[id]) {
+                    continue;
+                }
+                const newR = baseCol.remaps[id].r;
+                const newG = baseCol.remaps[id].g;
+                const newB = baseCol.remaps[id].b;
+                for (const i of baseCol.indices) {
+                    data[i] = newR;
+                    data[i+1] = newG;
+                    data[i+2] = newB;
+                }
             }
-            // Gets the base color's mapped color from the new palette
-            const newR = baseCol.remaps[id].r;
-            const newG = baseCol.remaps[id].g;
-            const newB = baseCol.remaps[id].b;
-            // Replace each index of mapped color with new color
-            for (const i of baseCol.indices) {
-                data[i] = newR;
-                data[i+1] = newG;
-                data[i+2] = newB;
-            }
+            img = new ImageData(data, imgObj.imgData.width, imgObj.imgData.height);
+            imgObj.repalettes[id] = img;
+
+            basePalette.hasChanged = false;
+            newPalette.hasChanged = false;
         }
-        // Save imagedata to original image object, reset flags
-        img = new ImageData(data, imgObj.imgData.width, imgObj.imgData.height);
-        imgObj.repalettes[id] = img;
 
-        basePalette.hasChanged = false;
-        newPalette.hasChanged = false;
-    }
-
-    // Show result on given canvas context (optional)
-    if (showContext) {
-        showContext.width = img.width;
-        showContext = img.height;
-        showContext.putImageData(img, 0, 0)
-        return showContext.canvas;
-    }
+        // Show result on given canvas context (optional)
+        if (showContext) {
+            showContext.width = img.width;
+            showContext.height = img.height;
+            showContext.putImageData(img, 0, 0);
+            showContext.canvas.dataset.repaletteId = id;
+            resolve(showContext.canvas);
+        } else {
+            resolve(null);
+        }
+    });
 }
+
 
 function deleteCol(palette, colorKey) {
     delete palette[colorKey];
@@ -560,50 +566,59 @@ function renamePalette(el) {
     nameEl.focus();
 }
 
-// Process multiple images
-function bulkProcess(images, palettes) {
-    for (const imgObj of images) {
-        for (const newPal of palettes) {
-            repalette(imgObj, newPal, false);
-        }
-    }
-}
-
 // Save output to computer as img-name_palette-name
-function download(imgObj, paletteObj) {
+async function download(imgObj, paletteObj) {
     const a = document.getElementById('download-single');
-    a.setAttribute('download', imgObj.name + "_" + paletteObj.name);
+
+    // If the repalette does not exist, create it
+    if (!imgObj.repalettes[paletteObj.id]) await repalette(imgObj, paletteObj);
+
+    a.setAttribute('download', imgObj.name + "_" + paletteObj.name + ".png");
     a.setAttribute('href', displayCanvas.toDataURL("image/png").replace("image/png", "image/octet-stream"));
     a.click();
 }
 
-function multiDownload(allImages) {
+async function multiDownload(allImages) {
     const zip = new JSZip();
-    const selectedImg = (allImages) ? false : getSelected("image");
-    const zipName = (allImages) ? repalettes : selectedImg.name;
+    let zipName;
 
-    // Populates ZIP
-    const addPalettesOfImgToZIP = function (imgObj) {
+    // Modified to return a promise that resolves after all blobs have been added
+    const addPalettesOfImgToZIP = async function (imgObj, myFolder) {
+        const promises = [];
         for (const id in palettes) {
             // Fetch the repalette for this image + palette, or create it
-            const folder = zip.folder(imgObj.name);
             const getCanvas = (imgObj.repalettes[id]) 
                 ? loadImageToCanvas(imgObj.img, hiddenCanvas, htx, imgObj.repalettes[id], "canvas") 
-                : repalette(imgObj, palettes[id], htx);
+                : await repalette(imgObj, palettes[id], htx);
             // Adds blobbed canvas to zip
-            new Promise((resolve) => {
+            promises.push(new Promise((resolve) => {
                 getCanvas.toBlob(function(blob) {
-                    // On success, add the blob to the folder and resolve the promise
-                    folder.file(`${imgObj.name}_${palettes[id].name}`, blob);
-                    resolve();
+                    const imgName = imgObj.name.split('.').join("");
+                    const pName = palettes[id].name.split('.').join("");
+                    myFolder.file(`${imgName}_${pName}.png`, blob, {binary: true});
+                    resolve(); // Resolve the promise once the blob has been added
                 });
-            });
+            }));
         }
+        // Wait for all promises to resolve
+        await Promise.all(promises);
     };
 
+    // Calls functions to populate ZIP for each subfolder
+    if (allImages) {
+        zipName = "repalettes";
+        for (const imgObj of Object.values(images)) {
+            const folder = zip.folder(imgObj.name);
+            await addPalettesOfImgToZIP(imgObj, folder); // Ensure this waits for completion
+        }
+    }
+    else {
+        const selectedImg = getSelected("image");
+        zipName = selectedImg.name.split('.').join("");
+        await addPalettesOfImgToZIP(selectedImg, zip); // Ensure this waits for completion
+    }
+
     // Save zip to user files
-    if (allImages) {for (const imgObj of images.values()) {addPalettesOfImgToZIP(imgObj)}}
-    else {addPalettesOfImgToZIP(selectedImg)}
     zip.generateAsync({type:"blob"}).then(function (blob) {
         saveAs(blob, zipName);
     });
@@ -617,7 +632,7 @@ function multiDownload(allImages) {
 
 //region To-Do
 /*
-    - add function for bulk process
+    - debug weird sizes in zipped images (htx???)
     - test palette deletion
     - palette numbering
     - remove img after palette deleted
@@ -637,4 +652,5 @@ Completed:
     - menu buttons set
     - debug rename
     - export function
+    - add function for bulk process
 */
