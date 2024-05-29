@@ -196,6 +196,7 @@ footer {
 
 .left-display, .right-display, .center-display {
     gap: 1.5rem;
+    justify-content: center;
 }
 
 .display > * {
@@ -254,6 +255,19 @@ footer {
     gap: 0.5rem;
 }
 
+.list a {
+    color: inherit;
+    height: inherit;
+    position: relative;
+}
+
+.list a::after {
+    content: url('external-link-svgrepo-com.svg');
+    display: inline-block;
+    position: absolute;
+    top: 4px;
+}
+
 .url-upload, .image, .palette {
     position: relative;
 }
@@ -294,15 +308,36 @@ input[type=text]::placeholder {
 .color-list {
     display: flex;
     flex-flow: wrap;
+    counter-reset: item;
     list-style: none;
     gap: 4px;
     margin-top: 4px;
 }
 
 .color {
-    width: 1rem;
-    height: 1rem;
+    width: 1.5rem;
+    height: 1.5rem;
     border-radius: 2px;
+    counter-increment: item;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    letter-spacing: 0px;
+    font-size: 0.875rem;
+}
+
+.color::before {
+    content: counter(item);
+    color: #eee;
+    text-shadow:
+        -1px -1px 0 var(--dark2),
+        0   -1px 0 var(--dark2),
+        1px -1px 0 var(--dark2),
+        1px  0   0 var(--dark2),
+        1px  1px 0 var(--dark2),
+        0    1px 0 var(--dark2),
+        -1px  1px 0 var(--dark2),
+        -1px  0   0 var(--dark2);
 }
 
 .tab {

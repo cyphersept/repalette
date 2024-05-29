@@ -141,7 +141,7 @@ function addPalette(file) {
             const img = new Image();
             img.onload = () => {
                 if (img.width > 0) {
-                    palette = paletteFromImg(loadImageToCanvas(img, hiddenCanvas, htx));
+                    palette = paletteFromImg(loadImageToCanvas(img, htx));
                     palette.name = file.name + " Palette";
                     palette.node = createPaletteNode(palette);
                     resolve(palette); // Resolve the promise with the palette object
@@ -162,30 +162,30 @@ function addPalette(file) {
 
 function createPaletteNode(obj) {
     const el = paletteTemplate.cloneNode(true);
-    const ul = el.querySelector(".color-list");
+    const ol = el.querySelector(".color-list");
     el.dataset.objKey = obj.id;
     el.classList.remove("template");
     el.querySelector(".name").textContent = obj.name
 
-    initColorList(obj, ul);
+    initColorList(obj, ol);
     palettesList.appendChild(el);
     return el;
 }
 
 // Display each color in palette
-function initColorList(obj, ul) {
+function initColorList(obj, ol) {
     for (const key in obj.colors) {
         const li = document.createElement("li");
         li.classList.add("color");
         li.dataset.key = key;
         li.style.backgroundColor = `rgb(${li.dataset.key})`
         obj.colors[key].node = li;
-        ul.appendChild(li);
+        ol.appendChild(li);
     }
-    obj.sortable = Sortable.create(ul, {
+    obj.sortable = Sortable.create(ol, {
         animation: 50,
         easing: "cubic-bezier(0.65, 0, 0.35, 1)",
-        onSort: function () {obj.hasChanged = true}
+        onSort: function () {obj.hasChanged = true},
     })
 }
 
@@ -245,7 +245,7 @@ function addImage(file) {
                 obj.name = name;
                 obj.date = file.lastModified;
                 obj.img = img;
-                obj.imgData = loadImageToCanvas(img, hiddenCanvas, htx);
+                obj.imgData = loadImageToCanvas(img, htx);
                 obj.defaultPalette = paletteFromImg(obj.imgData, false);
                 obj.repalettes = {}; // Stores imgData of processed alt palettes
 
@@ -270,13 +270,13 @@ function addImage(file) {
 
 function createImgNode(obj) {
     const el = imgTemplate.cloneNode(true);
-    const ul = el.querySelector(".color-list");
+    const ol = el.querySelector(".color-list");
     el.querySelector(".name").textContent = obj.name;
     el.dataset.objKey = obj.name;
     el.classList.remove("template");
-    obj.defaultPalette.node = ul;
+    obj.defaultPalette.node = ol;
     
-    initColorList(obj.defaultPalette, ul);
+    initColorList(obj.defaultPalette, ol);
     imagesList.appendChild(el);
     return el;
 }
@@ -307,7 +307,7 @@ function deleteObj(el, event) {
         delete palettes[id];
 
         // Resets output canvas to default palette
-        loadImageToCanvas(getSelected("image").img, displayCanvas, ctx)
+        loadImageToCanvas(getSelected("image").img, ctx)
     }
 
     // If currently selected, switch to new selected 
@@ -324,7 +324,8 @@ function getMaxScale(srcWidth, srcHeight, maxWidth, maxHeight) {
 }
 
 // Also converts image to canvas API data
-function loadImageToCanvas(img, canvas, context, customData = false, returns = "imagedata") {
+function loadImageToCanvas(img, context, customData = false, returns = "imagedata") {
+    const canvas = context.canvas;
     canvas.width = img.naturalWidth;
     canvas.height = img.naturalHeight;
     context.clearRect(0, 0, canvas.width, canvas.height);
@@ -370,7 +371,7 @@ function switchSelected(next) {
         displayOriginal.style.aspectRatio = obj.img.width / obj.img.height;
         
         // Changes right display to default palette
-        loadImageToCanvas(obj.img, displayCanvas, ctx, false);
+        loadImageToCanvas(obj.img, ctx, false);
         //displayCanvas.style.width = displayOriginal.style.width;
         displayCanvas.style.aspectRatio = displayOriginal.style.aspectRatio;
         displayCanvas.dataset.repaletteId = obj.defaultPalette.id
@@ -582,14 +583,14 @@ async function multiDownload(allImages) {
     const zip = new JSZip();
     let zipName;
 
-    // Modified to return a promise that resolves after all blobs have been added
+    // Resolves after all blobs have been added
     const addPalettesOfImgToZIP = async function (imgObj, myFolder) {
         const promises = [];
         for (const id in palettes) {
             // Fetch the repalette for this image + palette, or create it
             const getCanvas = (imgObj.repalettes[id]) 
-                ? loadImageToCanvas(imgObj.img, hiddenCanvas, htx, imgObj.repalettes[id], "canvas") 
-                : await repalette(imgObj, palettes[id], htx);
+                ? loadImageToCanvas(imgObj.img, ctx, imgObj.repalettes[id], "canvas") 
+                : await repalette(imgObj, palettes[id], ctx);
             // Adds blobbed canvas to zip
             promises.push(new Promise((resolve) => {
                 getCanvas.toBlob(function(blob) {
@@ -609,6 +610,7 @@ async function multiDownload(allImages) {
         zipName = "repalettes";
         for (const imgObj of Object.values(images)) {
             const folder = zip.folder(imgObj.name);
+            switchSelected(imgObj.node);
             await addPalettesOfImgToZIP(imgObj, folder); // Ensure this waits for completion
         }
     }
@@ -626,16 +628,13 @@ async function multiDownload(allImages) {
 
 // #endregion
 
+// Potential additions:
 //https://github.com/luukdv/color.js/
-
 // https://github.com/leeoniya/RgbQuant.js <- For simplifying 
 
 //region To-Do
 /*
-    - debug weird sizes in zipped images (htx???)
     - test palette deletion
-    - palette numbering
-    - remove img after palette deleted
     - allow color deletion
     - (stretch): color picker
     - (stretch): save current palettes as img, config palettes from img
@@ -645,6 +644,7 @@ Completed:
     - debug paletteMap -> repalette
     - debug palette deletion
     - display palette of base image
+    - remove img after palette deleted
     - add "has changed" flag for palettes to determine if palette needs to be remapped
     - implement click and drag scrolling for canvases
     - implement drag and drop
@@ -653,4 +653,5 @@ Completed:
     - debug rename
     - export function
     - add function for bulk process
+    - palette numbering
 */

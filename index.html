@@ -66,7 +66,7 @@
         
 
         <section class="images list flex vertical center">
-            <h3>Images</h3>
+            <h3><a href="https://opengameart.org/">Images</a></h3>
             <div class="divider"></div>
             <div class="upload center">
                 <input type="file" name="" id="img-upload" accept="image/*"  aria-label="Upload Image" multiple>
@@ -80,12 +80,12 @@
                         <button class="rename custom-btn"></button>
                     </div>
                 </div>
-                <ul class="flex color-list"></ul>
+                <ol class="flex color-list"></ul>
             </div>
         </section>
         
         <section class="palettes list flex vertical center">
-            <h3>Palettes</h3>
+            <h3><a href="https://lospec.com/palette-list">Palettes</a></h3>
             <div class="divider"></div>
             <div class="upload center">
                 <input type="file" id="palette-upload" name="palette-upload" accept="image/*" aria-label="Upload palette image" multiple>
@@ -100,19 +100,20 @@
                         <button class="rename custom-btn"></button>
                     </div>
                 </div>
-                <ul class="flex color-list"></ul>
+                <ol class="flex color-list"></ul>
             </div>
         </section>
 
     </main>
 
     <div class= "info" hidden>
-        To preserve a specific order for the source image's palette, embed it in the top left corner of the image.
+        <h3>Instructions:</h3>
+        <p>To preserve a specific order for a source image's palette, embed it in the top left corner of the image before uploading.</p>
     </div>
-    <footer class="center"> Created by</footer>
-    <script src="Sortable.js"></script>
-    <script src="FileSaver.js"></script>
-    <script src="jszip.js"></script>
+    <footer class="center">Source Code:</footer>
+    <script src="libs/Sortable.min.js"></script>
+    <script src="libs/FileSaver.min.js"></script>
+    <script src="libs/jszip.min.js"></script>
     <script src="repalette.js"></script> 
 </body>
 </html>
