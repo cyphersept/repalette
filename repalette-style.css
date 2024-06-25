@@ -50,6 +50,7 @@ html {
 
 body {
     min-height: 100vh;
+    width: -moz-fit-content;
     width: fit-content;
     min-width: 100%;
     display: flex;
@@ -255,13 +256,13 @@ footer {
     gap: 0.5rem;
 }
 
-.list a {
+a {
     color: inherit;
     height: inherit;
     position: relative;
 }
 
-.list a::after {
+.list a::after, footer a::after {
     content: url('external-link-svgrepo-com.svg');
     display: inline-block;
     position: absolute;
@@ -385,8 +386,18 @@ input[type=text]::placeholder {
 .color-list {
     display: none;
 }
+
 .expanded + .color-list{
     display: flex;
+}
+
+footer svg {
+    vertical-align: bottom;
+    fill: var(--light3);
+}
+
+footer a::after {
+    content: url('external-link-footer.svg');
 }
 /*#endregion*/
 
